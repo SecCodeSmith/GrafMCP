@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "graf-memory": {
+      "command": "node",
+      "args": ["c:/Users/Kuba/Desktop/GrafMCP_For_WorksSpace/src/index.js"]
+    }
+  }
+}

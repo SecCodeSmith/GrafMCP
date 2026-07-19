@@ -1,0 +1,795 @@
+{
+  "entities": [
+    {
+      "name": "B1.1 The Oath and the Purge",
+      "type": "chapter",
+      "created": "2026-07-17T18:59:35.546Z",
+      "updated": "2026-07-17T19:01:39.554Z",
+      "observations": [
+        {
+          "id": 412,
+          "text": "Global 1, POV Julius, ~4,000 words.",
+          "created": "2026-07-17T18:59:35.565Z"
+        },
+        {
+          "id": 413,
+          "text": "Act 1: The Departure. Julius rejects the Emperor's cruelty during the Unification Wars.",
+          "created": "2026-07-17T18:59:35.576Z"
+        },
+        {
+          "id": 431,
+          "text": "Status: WRITTEN, ~850 words, file story/Book1/Ch01.md",
+          "created": "2026-07-17T19:01:39.560Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.10 The Atrocity",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:12.460Z",
+      "updated": "2026-07-17T19:00:44.494Z",
+      "observations": [
+        {
+          "id": 422,
+          "text": "Global 10, POV Sarah Briggs, ~4,000 words.",
+          "created": "2026-07-17T19:00:12.474Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.11 The God Returns",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:12.951Z",
+      "updated": "2026-07-17T19:00:45.012Z",
+      "observations": [
+        {
+          "id": 423,
+          "text": "Global 11, POV Gates, ~4,000 words.",
+          "created": "2026-07-17T19:00:12.960Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.12 The Void Erasure",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:12.977Z",
+      "updated": "2026-07-17T19:00:45.033Z",
+      "observations": [
+        {
+          "id": 424,
+          "text": "Global 12, POV Julius, ~4,000 words.",
+          "created": "2026-07-17T19:00:12.989Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.13 The Secret Kept",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:13.038Z",
+      "updated": "2026-07-17T19:00:45.107Z",
+      "observations": [
+        {
+          "id": 425,
+          "text": "Global 13, POV Roboute Guilliman, ~4,000 words.",
+          "created": "2026-07-17T19:00:13.049Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.14 The Envoy Arrives",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:19.872Z",
+      "updated": "2026-07-17T19:00:51.394Z",
+      "observations": [
+        {
+          "id": 426,
+          "text": "Global 14, POV Lion El'Jonson, ~4,000 words.",
+          "created": "2026-07-17T19:00:19.879Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.15 Questions Without Answers",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:20.400Z",
+      "updated": "2026-07-17T19:00:52.111Z",
+      "observations": [
+        {
+          "id": 427,
+          "text": "Global 15, POV Lion El'Jonson, ~4,000 words.",
+          "created": "2026-07-17T19:00:20.412Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.16 The Arming of the Moon's Daughter",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:20.970Z",
+      "updated": "2026-07-17T19:00:53.361Z",
+      "observations": [
+        {
+          "id": 428,
+          "text": "Global 16, POV Cornelia, ~4,000 words.",
+          "created": "2026-07-17T19:00:20.985Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.17 The Warp Pushes Back",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:21.536Z",
+      "updated": "2026-07-17T19:00:53.384Z",
+      "observations": [
+        {
+          "id": 429,
+          "text": "Global 17, POV Quirinus, ~4,000 words.",
+          "created": "2026-07-17T19:00:21.556Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.18 Compassion's Flame",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:22.098Z",
+      "updated": "2026-07-17T19:00:53.387Z",
+      "observations": [
+        {
+          "id": 430,
+          "text": "Global 18, POV Lion El'Jonson, ~4,000 words.",
+          "created": "2026-07-17T19:00:22.115Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.2 The Three Farewells",
+      "type": "chapter",
+      "created": "2026-07-17T18:59:57.818Z",
+      "updated": "2026-07-17T19:00:01.577Z",
+      "observations": [
+        {
+          "id": 414,
+          "text": "Global 2, POV Julius, ~4,000 words.",
+          "created": "2026-07-17T18:59:57.831Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.3 The Long Talk",
+      "type": "chapter",
+      "created": "2026-07-17T18:59:58.299Z",
+      "updated": "2026-07-17T19:00:01.537Z",
+      "observations": [
+        {
+          "id": 415,
+          "text": "Global 3, POV The Tribune, ~4,000 words.",
+          "created": "2026-07-17T18:59:58.310Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.4 The Silent Voyage",
+      "type": "chapter",
+      "created": "2026-07-17T18:59:58.840Z",
+      "updated": "2026-07-17T19:00:33.734Z",
+      "observations": [
+        {
+          "id": 416,
+          "text": "Global 4, POV Julius, ~4,000 words.",
+          "created": "2026-07-17T18:59:58.853Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.5 The Unintended Shadow",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:09.685Z",
+      "updated": "2026-07-17T19:00:41.511Z",
+      "observations": [
+        {
+          "id": 417,
+          "text": "Global 5, POV Horus, ~4,000 words.",
+          "created": "2026-07-17T19:00:09.695Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.6 The Fabricated Reality",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:10.113Z",
+      "updated": "2026-07-17T19:00:42.052Z",
+      "observations": [
+        {
+          "id": 418,
+          "text": "Global 6, POV Mercurius, ~4,000 words.",
+          "created": "2026-07-17T19:00:10.121Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.7 Rifleman Cooper",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:10.664Z",
+      "updated": "2026-07-17T19:00:42.640Z",
+      "observations": [
+        {
+          "id": 419,
+          "text": "Global 7, POV Jack Cooper, ~4,000 words.",
+          "created": "2026-07-17T19:00:10.675Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.8 Seventeen Years",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:11.215Z",
+      "updated": "2026-07-17T19:00:43.158Z",
+      "observations": [
+        {
+          "id": 420,
+          "text": "Global 8, POV Cornelia, ~4,000 words.",
+          "created": "2026-07-17T19:00:11.222Z"
+        }
+      ]
+    },
+    {
+      "name": "B1.9 The Wall Breaks",
+      "type": "chapter",
+      "created": "2026-07-17T19:00:11.748Z",
+      "updated": "2026-07-17T19:00:43.703Z",
+      "observations": [
+        {
+          "id": 421,
+          "text": "Global 9, POV Imperial Captain, ~4,000 words.",
+          "created": "2026-07-17T19:00:11.755Z"
+        }
+      ]
+    },
+    {
+      "name": "Book 1",
+      "type": "book",
+      "created": "2026-07-17T18:59:34.996Z",
+      "updated": "2026-07-17T19:00:33.564Z",
+      "observations": [
+        {
+          "id": 411,
+          "text": "Book 1: The Moon's Frontier. Status: planned, 18 chapters. Act 1: The Departure (Ch 1-4). Act 2: The Frontier (Ch 5-8). Act 3: The Awakening (Ch 9-13). Act 4: The Envoy (Ch 14-18).",
+          "created": "2026-07-17T18:59:35.013Z"
+        }
+      ]
+    },
+    {
+      "name": "Cornelia",
+      "type": "character",
+      "created": "2026-07-17T18:59:21.203Z",
+      "updated": "2026-07-17T18:59:21.203Z",
+      "observations": [
+        {
+          "id": 402,
+          "text": "Daughter of Julius and Gates. A powerful Perpetual born with sealed powers.",
+          "created": "2026-07-17T18:59:21.212Z"
+        },
+        {
+          "id": 403,
+          "text": "Wears platinum power armor forged by Mulciber.",
+          "created": "2026-07-17T18:59:21.216Z"
+        }
+      ]
+    },
+    {
+      "name": "Horus",
+      "type": "character",
+      "created": "2026-07-17T18:59:23.184Z",
+      "updated": "2026-07-17T18:59:23.184Z",
+      "observations": [
+        {
+          "id": 408,
+          "text": "Primarch of the Luna Wolves. Meets Julius in the Frontier before the Heresy.",
+          "created": "2026-07-17T18:59:23.198Z"
+        }
+      ]
+    },
+    {
+      "name": "Julius Coperium / Jack Cooper",
+      "type": "character",
+      "created": "2026-07-17T18:59:19.423Z",
+      "updated": "2026-07-17T19:00:01.572Z",
+      "observations": [
+        {
+          "id": 396,
+          "text": "The biological son of the Emperor, born in ancient Rome. Equal in power to the Emperor.",
+          "created": "2026-07-17T18:59:19.456Z"
+        },
+        {
+          "id": 397,
+          "text": "Sealed his memory to live as Jack Cooper, Rifleman 3rd Class and Hero of Typhon.",
+          "created": "2026-07-17T18:59:19.475Z"
+        }
+      ]
+    },
+    {
+      "name": "Lion El'Jonson",
+      "type": "character",
+      "created": "2026-07-17T18:59:22.725Z",
+      "updated": "2026-07-17T18:59:22.725Z",
+      "observations": [
+        {
+          "id": 407,
+          "text": "Primarch of the Dark Angels. Commands the diplomatic envoy to the Frontier.",
+          "created": "2026-07-17T18:59:22.739Z"
+        }
+      ]
+    },
+    {
+      "name": "Mercurius",
+      "type": "character",
+      "created": "2026-07-17T18:59:23.214Z",
+      "updated": "2026-07-17T18:59:23.214Z",
+      "observations": [
+        {
+          "id": 409,
+          "text": "The Explorer. One of the six Primarchs of Julius. Boyish and wry.",
+          "created": "2026-07-17T18:59:23.222Z"
+        }
+      ]
+    },
+    {
+      "name": "Quirinus",
+      "type": "character",
+      "created": "2026-07-17T18:59:23.259Z",
+      "updated": "2026-07-17T18:59:23.259Z",
+      "observations": [
+        {
+          "id": 410,
+          "text": "The Defender. One of the six Primarchs of Julius. Wears iron-grey armor with a tower shield.",
+          "created": "2026-07-17T18:59:23.268Z"
+        }
+      ]
+    },
+    {
+      "name": "Roboute Guilliman",
+      "type": "character",
+      "created": "2026-07-17T18:59:22.163Z",
+      "updated": "2026-07-17T18:59:22.163Z",
+      "observations": [
+        {
+          "id": 406,
+          "text": "Lord Commander of the Imperium, Primarch of the Ultramarines.",
+          "created": "2026-07-17T18:59:22.172Z"
+        }
+      ]
+    },
+    {
+      "name": "Rule 10: Flavor bends",
+      "type": "rule",
+      "created": "2026-07-17T18:58:58.184Z",
+      "updated": "2026-07-17T18:58:58.184Z",
+      "observations": [
+        {
+          "id": 395,
+          "text": "WW2 and the Aquila's father-son origin are AU flavor. The story treats Julius's Aquila as a private pre-Treaty symbol.",
+          "created": "2026-07-17T18:58:58.193Z"
+        }
+      ]
+    },
+    {
+      "name": "Rule 1: Departure date",
+      "type": "rule",
+      "created": "2026-07-17T18:58:53.671Z",
+      "updated": "2026-07-17T18:59:49.089Z",
+      "observations": [
+        {
+          "id": 386,
+          "text": "Julius leaves Terra circa M30 after the Thunder Warriors purge begins, before the Scattering of the Primarchs.",
+          "created": "2026-07-17T18:58:53.678Z"
+        }
+      ]
+    },
+    {
+      "name": "Rule 2: The erasure",
+      "type": "rule",
+      "created": "2026-07-17T18:58:54.370Z",
+      "updated": "2026-07-17T18:59:49.145Z",
+      "observations": [
+        {
+          "id": 387,
+          "text": "The Emperor personally erased Julius from all Imperial records; Custodes are oath-bound to silence. Horus's suppressed report deepened an existing void.",
+          "created": "2026-07-17T18:58:54.396Z"
+        }
+      ]
+    },
+    {
+      "name": "Rule 3: The gift",
+      "type": "rule",
+      "created": "2026-07-17T18:58:55.037Z",
+      "updated": "2026-07-17T18:58:55.037Z",
+      "observations": [
+        {
+          "id": 388,
+          "text": "The 100 Custodians are a permanent, explicit gift from the Emperor. The Tribune and 40 assigned during Primarch project; 60 granted at departure. The 100 grew to fifteen thousand over ten millennia.",
+          "created": "2026-07-17T18:58:55.044Z"
+        }
+      ]
+    },
+    {
+      "name": "Rule 4: Time",
+      "type": "rule",
+      "created": "2026-07-17T18:58:55.714Z",
+      "updated": "2026-07-17T18:58:55.714Z",
+      "observations": [
+        {
+          "id": 389,
+          "text": "Time inside the anomaly is unanchored from the materium: ~10,000 years outside ≈ a few centuries of Frontier history plus Jack's lifetime inside. No fixed ratio.",
+          "created": "2026-07-17T18:58:55.727Z"
+        }
+      ]
+    },
+    {
+      "name": "Rule 5: Fold-tech",
+      "type": "rule",
+      "created": "2026-07-17T18:58:56.252Z",
+      "updated": "2026-07-17T18:58:56.252Z",
+      "observations": [
+        {
+          "id": 390,
+          "text": "Fold technology is Julius's DAoT-archive tech. The Typhon Fold Weapon was a lost fragment of early Frontier infrastructure. Weapon and Ark are relics of Julius's early fold infrastructure.",
+          "created": "2026-07-17T18:58:56.260Z"
+        }
+      ]
+    },
+    {
+      "name": "Rule 6: The fabricated Frontier",
+      "type": "rule",
+      "created": "2026-07-17T18:58:56.819Z",
+      "updated": "2026-07-17T18:58:56.819Z",
+      "observations": [
+        {
+          "id": 391,
+          "text": "The entire Frontier is Julius's creation (woven memory). The corporate seed grew into the IMC. The Frontier War is his unintended consequence.",
+          "created": "2026-07-17T18:58:56.850Z"
+        }
+      ]
+    },
+    {
+      "name": "Rule 7: The decree",
+      "type": "rule",
+      "created": "2026-07-17T18:58:57.503Z",
+      "updated": "2026-07-17T18:58:57.503Z",
+      "observations": [
+        {
+          "id": 392,
+          "text": "Julius forbade his legions from intervening in colonist affairs. The Moon fleet and six legions hold the anomaly rim, unseen.",
+          "created": "2026-07-17T18:58:57.517Z"
+        }
+      ]
+    },
+    {
+      "name": "Rule 8: The seal",
+      "type": "rule",
+      "created": "2026-07-17T18:58:58.115Z",
+      "updated": "2026-07-17T18:58:58.115Z",
+      "observations": [
+        {
+          "id": 393,
+          "text": "Julius sealed himself for one honest mortal life. The six Primarchs held stewardship. Unsealing condition: harm to his people that he could not bear.",
+          "created": "2026-07-17T18:58:58.132Z"
+        }
+      ]
+    },
+    {
+      "name": "Rule 9: Power ceiling",
+      "type": "rule",
+      "created": "2026-07-17T18:58:58.153Z",
+      "updated": "2026-07-17T18:58:58.153Z",
+      "observations": [
+        {
+          "id": 394,
+          "text": "Julius is equal or stronger than the Emperor. Stakes NEVER come from 'can they win'. Threats must be indirect (hostages, corruption, politics). No frontal boss fight.",
+          "created": "2026-07-17T18:58:58.162Z"
+        }
+      ]
+    },
+    {
+      "name": "Sarah Briggs",
+      "type": "character",
+      "created": "2026-07-17T18:59:21.608Z",
+      "updated": "2026-07-17T18:59:21.608Z",
+      "observations": [
+        {
+          "id": 404,
+          "text": "Commander of the Frontier Militia's Marauder Corps / 9th Fleet.",
+          "created": "2026-07-17T18:59:21.618Z"
+        },
+        {
+          "id": 405,
+          "text": "Lobotomized by the Imperial compliance fleet, breaking Julius's seal.",
+          "created": "2026-07-17T18:59:21.624Z"
+        }
+      ]
+    },
+    {
+      "name": "Sophia Gates (Gates)",
+      "type": "character",
+      "created": "2026-07-17T18:59:20.647Z",
+      "updated": "2026-07-17T18:59:20.647Z",
+      "observations": [
+        {
+          "id": 400,
+          "text": "Commander of the 6-4 mercenary faction. Stubborn, warm, incredibly perceptive.",
+          "created": "2026-07-17T18:59:20.654Z"
+        },
+        {
+          "id": 401,
+          "text": "Wife of Julius and mother of Cornelia.",
+          "created": "2026-07-17T18:59:20.659Z"
+        }
+      ]
+    },
+    {
+      "name": "The Rejection of Terra",
+      "type": "plot_thread",
+      "created": "2026-07-17T18:59:49.065Z",
+      "updated": "2026-07-17T18:59:49.065Z",
+      "observations": []
+    },
+    {
+      "name": "The Tribune",
+      "type": "character",
+      "created": "2026-07-17T18:59:20.019Z",
+      "updated": "2026-07-17T18:59:20.019Z",
+      "observations": [
+        {
+          "id": 398,
+          "text": "Julius's personal guardian, chosen from the Hetaeron Guard.",
+          "created": "2026-07-17T18:59:20.032Z"
+        },
+        {
+          "id": 399,
+          "text": "Silent, clever, wears pristine silver-gold armor. Commands the Custodians.",
+          "created": "2026-07-17T18:59:20.039Z"
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "from": "B1.1 The Oath and the Purge",
+      "type": "requires_rule",
+      "to": "Rule 1: Departure date",
+      "created": "2026-07-17T18:59:49.095Z"
+    },
+    {
+      "from": "B1.1 The Oath and the Purge",
+      "type": "requires_rule",
+      "to": "Rule 2: The erasure",
+      "created": "2026-07-17T18:59:49.151Z"
+    },
+    {
+      "from": "B1.1 The Oath and the Purge",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T18:59:47.961Z"
+    },
+    {
+      "from": "B1.2 The Three Farewells",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T18:59:59.289Z"
+    },
+    {
+      "from": "B1.3 The Long Talk",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T18:59:59.943Z"
+    },
+    {
+      "from": "B1.4 The Silent Voyage",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:00.460Z"
+    },
+    {
+      "from": "B1.5 The Unintended Shadow",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:22.584Z"
+    },
+    {
+      "from": "B1.6 The Fabricated Reality",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:23.091Z"
+    },
+    {
+      "from": "B1.7 Rifleman Cooper",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:23.573Z"
+    },
+    {
+      "from": "B1.8 Seventeen Years",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:23.611Z"
+    },
+    {
+      "from": "B1.9 The Wall Breaks",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:23.661Z"
+    },
+    {
+      "from": "B1.10 The Atrocity",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:29.774Z"
+    },
+    {
+      "from": "B1.11 The God Returns",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:30.337Z"
+    },
+    {
+      "from": "B1.12 The Void Erasure",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:30.856Z"
+    },
+    {
+      "from": "B1.13 The Secret Kept",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:31.438Z"
+    },
+    {
+      "from": "B1.14 The Envoy Arrives",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:32.010Z"
+    },
+    {
+      "from": "B1.15 Questions Without Answers",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:32.556Z"
+    },
+    {
+      "from": "B1.16 The Arming of the Moon's Daughter",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:33.098Z"
+    },
+    {
+      "from": "B1.17 The Warp Pushes Back",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:33.536Z"
+    },
+    {
+      "from": "B1.18 Compassion's Flame",
+      "type": "part_of",
+      "to": "Book 1",
+      "created": "2026-07-17T19:00:33.568Z"
+    },
+    {
+      "from": "Julius Coperium / Jack Cooper",
+      "type": "appears_in",
+      "to": "B1.1 The Oath and the Purge",
+      "created": "2026-07-17T18:59:48.543Z"
+    },
+    {
+      "from": "B1.1 The Oath and the Purge",
+      "type": "opens",
+      "to": "The Rejection of Terra",
+      "created": "2026-07-17T18:59:49.072Z"
+    },
+    {
+      "from": "B1.1 The Oath and the Purge",
+      "type": "next",
+      "to": "B1.2 The Three Farewells",
+      "created": "2026-07-17T19:00:01.003Z"
+    },
+    {
+      "from": "Julius Coperium / Jack Cooper",
+      "type": "appears_in",
+      "to": "B1.2 The Three Farewells",
+      "created": "2026-07-17T19:00:01.581Z"
+    },
+    {
+      "from": "B1.2 The Three Farewells",
+      "type": "next",
+      "to": "B1.3 The Long Talk",
+      "created": "2026-07-17T19:00:01.512Z"
+    },
+    {
+      "from": "B1.3 The Long Talk",
+      "type": "next",
+      "to": "B1.4 The Silent Voyage",
+      "created": "2026-07-17T19:00:01.549Z"
+    },
+    {
+      "from": "B1.4 The Silent Voyage",
+      "type": "next",
+      "to": "B1.5 The Unintended Shadow",
+      "created": "2026-07-17T19:00:33.755Z"
+    },
+    {
+      "from": "B1.5 The Unintended Shadow",
+      "type": "next",
+      "to": "B1.6 The Fabricated Reality",
+      "created": "2026-07-17T19:00:41.517Z"
+    },
+    {
+      "from": "B1.6 The Fabricated Reality",
+      "type": "next",
+      "to": "B1.7 Rifleman Cooper",
+      "created": "2026-07-17T19:00:42.068Z"
+    },
+    {
+      "from": "B1.7 Rifleman Cooper",
+      "type": "next",
+      "to": "B1.8 Seventeen Years",
+      "created": "2026-07-17T19:00:42.647Z"
+    },
+    {
+      "from": "B1.8 Seventeen Years",
+      "type": "next",
+      "to": "B1.9 The Wall Breaks",
+      "created": "2026-07-17T19:00:43.165Z"
+    },
+    {
+      "from": "B1.9 The Wall Breaks",
+      "type": "next",
+      "to": "B1.10 The Atrocity",
+      "created": "2026-07-17T19:00:43.709Z"
+    },
+    {
+      "from": "B1.10 The Atrocity",
+      "type": "next",
+      "to": "B1.11 The God Returns",
+      "created": "2026-07-17T19:00:44.501Z"
+    },
+    {
+      "from": "B1.11 The God Returns",
+      "type": "next",
+      "to": "B1.12 The Void Erasure",
+      "created": "2026-07-17T19:00:45.018Z"
+    },
+    {
+      "from": "B1.12 The Void Erasure",
+      "type": "next",
+      "to": "B1.13 The Secret Kept",
+      "created": "2026-07-17T19:00:45.040Z"
+    },
+    {
+      "from": "B1.13 The Secret Kept",
+      "type": "next",
+      "to": "B1.14 The Envoy Arrives",
+      "created": "2026-07-17T19:00:45.114Z"
+    },
+    {
+      "from": "B1.14 The Envoy Arrives",
+      "type": "next",
+      "to": "B1.15 Questions Without Answers",
+      "created": "2026-07-17T19:00:51.400Z"
+    },
+    {
+      "from": "B1.15 Questions Without Answers",
+      "type": "next",
+      "to": "B1.16 The Arming of the Moon's Daughter",
+      "created": "2026-07-17T19:00:52.118Z"
+    },
+    {
+      "from": "B1.16 The Arming of the Moon's Daughter",
+      "type": "next",
+      "to": "B1.17 The Warp Pushes Back",
+      "created": "2026-07-17T19:00:53.367Z"
+    },
+    {
+      "from": "B1.17 The Warp Pushes Back",
+      "type": "next",
+      "to": "B1.18 Compassion's Flame",
+      "created": "2026-07-17T19:00:53.390Z"
+    }
+  ]
+}

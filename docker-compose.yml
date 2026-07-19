@@ -1,0 +1,14 @@
+services:
+  graf-memory:
+    build: .
+    image: graf-mcp
+    container_name: graf-memory
+    # bound to 127.0.0.1 on the host: dashboard and MCP stay local-only
+    ports:
+      - "127.0.0.1:7688:7688"
+    volumes:
+      - graf-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  graf-data:

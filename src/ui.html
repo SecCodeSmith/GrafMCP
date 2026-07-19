@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GrafMCP — Memory Dashboard</title>
+<style>
+  :root {
+    --surface-1: #fcfcfb;
+    --page: #f9f9f7;
+    --ink-1: #0b0b0b;
+    --ink-2: #52514e;
+    --ink-muted: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --critical: #d03b3b;
+    --good: #0ca30c;
+    --accent: #2a78d6;
+    --s1: #2a78d6; --s2: #1baf7a; --s3: #eda100; --s4: #008300;
+    --s5: #4a3aa7; --s6: #e34948; --s7: #e87ba4; --s8: #eb6834;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-1: #1a1a19;
+      --page: #0d0d0d;
+      --ink-1: #ffffff;
+      --ink-2: #c3c2b7;
+      --ink-muted: #898781;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --border: rgba(255,255,255,0.10);
+      --accent: #3987e5;
+      --s1: #3987e5; --s2: #199e70; --s3: #c98500; --s4: #008300;
+      --s5: #9085e9; --s6: #e66767; --s7: #d55181; --s8: #d95926;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--ink-1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  header {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-1);
+  }
+  header h1 { font-size: 16px; font-weight: 650; letter-spacing: .01em; }
+  header h1 span { color: var(--ink-muted); font-weight: 400; }
+  #wspick {
+    padding: 5px 10px; border: 1px solid var(--baseline); border-radius: 8px;
+    background: var(--page); color: var(--ink-1); font: 600 12.5px system-ui, sans-serif;
+  }
+  #cleanupbtn, #newbtn {
+    padding: 5px 12px; border: 1px solid var(--baseline); border-radius: 8px;
+    background: var(--page); color: var(--ink-2); font: 600 12.5px system-ui, sans-serif; cursor: pointer;
+  }
+  #cleanupbtn:hover, #newbtn:hover { border-color: var(--accent); color: var(--accent); }
+  #cleanupbtn:disabled { opacity: .5; cursor: default; }
+  #newbtn { border-color: var(--accent); color: var(--accent); }
+  .tiles { display: flex; gap: 10px; margin-left: auto; }
+  .tile {
+    padding: 4px 14px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--page); text-align: center; min-width: 76px;
+  }
+  .tile b { display: block; font-size: 18px; font-weight: 650; }
+  .tile span { font-size: 11px; color: var(--ink-2); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); display: inline-block; margin-right: 6px; }
+  .dot.err { background: var(--critical); }
+  #conn { font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+
+  main { flex: 1; display: flex; min-height: 0; }
+  #graphwrap { flex: 1; position: relative; min-width: 0; }
+  #graph { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; }
+  #fitbtn {
+    position: absolute; right: 12px; top: 12px; z-index: 4;
+    border: 1px solid var(--baseline); background: var(--surface-1); color: var(--ink-2);
+    border-radius: 8px; padding: 5px 12px; font: 600 12px system-ui, sans-serif; cursor: pointer;
+  }
+  #fitbtn.on { border-color: var(--accent); color: var(--accent); }
+  #legend {
+    position: absolute; left: 12px; top: 12px; display: flex; flex-direction: column; gap: 4px;
+    background: color-mix(in srgb, var(--surface-1) 88%, transparent);
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 12px;
+    max-height: 60%; overflow-y: auto;
+  }
+  #legend .row { display: flex; align-items: center; gap: 7px; color: var(--ink-2); }
+  #legend .sw { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  #empty {
+    position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px;
+    align-items: center; justify-content: center; color: var(--ink-muted); text-align: center;
+    pointer-events: none; padding: 24px;
+  }
+  #empty b { font-size: 16px; color: var(--ink-2); }
+  #tip {
+    position: absolute; pointer-events: none; display: none; z-index: 5;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 10px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.18); max-width: 260px;
+  }
+  #tip b { display: block; }
+  #tip span { color: var(--ink-2); }
+
+  aside {
+    width: 380px; flex: none; display: flex; flex-direction: column; min-height: 0;
+    border-left: 1px solid var(--border); background: var(--surface-1);
+  }
+  .tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .tabs button {
+    flex: 1; padding: 9px 4px; background: none; border: none; cursor: pointer;
+    font: 600 13px system-ui, sans-serif; color: var(--ink-muted);
+    border-bottom: 2px solid transparent;
+  }
+  .tabs button.on { color: var(--ink-1); border-bottom-color: var(--accent); }
+  .pane { flex: 1; overflow-y: auto; padding: 10px 12px; display: none; min-height: 0; }
+  .pane.on { display: block; }
+
+  .logline { padding: 6px 4px; border-bottom: 1px solid var(--grid); font-size: 12.5px; }
+  .logline time { color: var(--ink-muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
+  .kind {
+    display: inline-block; font-size: 10.5px; font-weight: 650; border-radius: 5px;
+    padding: 1px 6px; margin-right: 6px; vertical-align: 1px;
+    color: var(--surface-1);
+  }
+  .kind.tool { background: var(--accent); }
+  .kind.server { background: var(--ink-muted); }
+  .kind.error { background: var(--critical); }
+  .kind.agent { background: var(--good); }
+  .kind.debug, .kind.note {
+    background: transparent; color: var(--ink-muted);
+    border: 1px solid var(--baseline); padding: 0 5px;
+  }
+  .logline .args { color: var(--ink-2); word-break: break-word; display: block; margin: 2px 0 0 2px; }
+  .logline .args.result { color: var(--ink-muted); }
+  #logchips { display: flex; gap: 6px; flex-wrap: wrap; padding-bottom: 8px; }
+  .fchip {
+    border: 1px solid var(--baseline); background: none; color: var(--ink-2);
+    border-radius: 12px; padding: 2px 10px; font: 600 11.5px system-ui, sans-serif; cursor: pointer;
+  }
+  .fchip.on { background: var(--accent); border-color: var(--accent); color: var(--surface-1); }
+
+  #entfilter {
+    width: 100%; padding: 7px 10px; margin-bottom: 8px;
+    border: 1px solid var(--baseline); border-radius: 8px;
+    background: var(--page); color: var(--ink-1); font: inherit;
+  }
+  .entrow {
+    display: flex; align-items: center; gap: 8px; padding: 7px 6px; border-radius: 7px; cursor: pointer;
+  }
+  .entrow:hover { background: var(--page); }
+  .entrow .sw { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .entrow .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .entrow .ty { color: var(--ink-muted); font-size: 11.5px; }
+  .entrow .ct { color: var(--ink-2); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+
+  #details h2 { font-size: 16px; margin-bottom: 2px; overflow-wrap: break-word; }
+  #details .meta { color: var(--ink-muted); font-size: 11.5px; margin-bottom: 10px; }
+  #details h3 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--ink-muted); margin: 14px 0 6px;
+  }
+  .obs { padding: 6px 8px; border-left: 3px solid var(--grid); margin-bottom: 6px; font-size: 13px; }
+  .obs small { color: var(--ink-muted); }
+  .rel { padding: 4px 2px; font-size: 13px; color: var(--ink-2); }
+  .rel a { color: var(--accent); cursor: pointer; text-decoration: none; }
+  .rel a:hover { text-decoration: underline; }
+  .rel .rt { font-weight: 600; color: var(--ink-1); }
+  .chip {
+    display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11.5px;
+    border: 1px solid var(--border); color: var(--ink-2); margin-left: 6px; vertical-align: 2px;
+  }
+  .hint { color: var(--ink-muted); font-size: 12.5px; padding: 8px 2px; }
+
+  /* ---- node editor ---- */
+  .btn-sm {
+    border: 1px solid var(--baseline); background: var(--page); color: var(--ink-2);
+    border-radius: 6px; padding: 3px 9px; font: 600 11.5px system-ui, sans-serif; cursor: pointer;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm.danger:hover { border-color: var(--critical); color: var(--critical); }
+  .detail-actions { display: flex; gap: 6px; margin: 8px 0 2px; flex-wrap: wrap; }
+  .edit-row, .addform { display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap; align-items: center; }
+  .edit-row input, .addform input {
+    flex: 1; min-width: 88px; padding: 5px 8px; border: 1px solid var(--baseline);
+    border-radius: 6px; background: var(--page); color: var(--ink-1); font: inherit;
+  }
+  h3 .h3btn { float: right; margin-top: -2px; }
+  .obs .del, .rel .del {
+    border: none; background: none; color: var(--ink-muted); cursor: pointer;
+    font-size: 15px; line-height: 1; padding: 0 2px; float: right;
+  }
+  .obs .del:hover, .rel .del:hover { color: var(--critical); }
+  .obs .txt { cursor: text; }
+  .obs .txt:hover { text-decoration: underline dotted var(--baseline); }
+
+  /* ---- tree view ---- */
+  #treedir { padding: 3px 8px; border: 1px solid var(--baseline); border-radius: 6px;
+    background: var(--page); color: var(--ink-1); font: 600 11.5px system-ui, sans-serif; float: right; }
+  .tree { font-size: 12.5px; margin-top: 4px; }
+  .tree ul { list-style: none; margin: 0 0 0 12px; padding: 0; border-left: 1px solid var(--grid); }
+  .tree li { padding: 2px 0 2px 10px; }
+  .tree .tnode { cursor: pointer; }
+  .tree .tnode:hover { color: var(--accent); text-decoration: underline; }
+  .tree .trel { color: var(--ink-muted); font-size: 11px; }
+  .tree .rep { color: var(--ink-muted); font-size: 11px; }
+  .tree .tdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; vertical-align: 1px; margin-right: 5px; }
+
+  /* ---- modal ---- */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 20;
+    display: none; align-items: center; justify-content: center;
+  }
+  .modal-backdrop.on { display: flex; }
+  .modal {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; width: 380px; max-width: 92vw; box-shadow: 0 12px 44px rgba(0,0,0,.35);
+  }
+  .modal h3 { margin-bottom: 6px; font-size: 15px; }
+  .modal label { display: block; font-size: 12px; color: var(--ink-2); margin: 10px 0 3px; }
+  .modal input, .modal textarea {
+    width: 100%; padding: 7px 9px; border: 1px solid var(--baseline); border-radius: 7px;
+    background: var(--page); color: var(--ink-1); font: inherit;
+  }
+  .modal textarea { resize: vertical; min-height: 56px; }
+  .modal .err { color: var(--critical); font-size: 12px; margin-top: 8px; min-height: 14px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+  .btn-primary {
+    border: 1px solid var(--accent); background: var(--accent); color: #fff;
+    border-radius: 7px; padding: 6px 15px; font: 600 12.5px system-ui, sans-serif; cursor: pointer;
+  }
+  footer {
+    padding: 5px 16px; font-size: 11.5px; color: var(--ink-muted);
+    border-top: 1px solid var(--border); background: var(--surface-1);
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>GrafMCP <span>· graph memory for code agents</span></h1>
+  <div id="conn"><span class="dot" id="conndot"></span><span id="conntext">connecting…</span></div>
+  <select id="wspick" title="Filter by workspace"><option value="all">All workspaces</option></select>
+  <button id="newbtn" title="Create a new node">＋ New node</button>
+  <button id="cleanupbtn" title="Remove exact-duplicate facts and orphaned records">Clean up</button>
+  <div class="tiles">
+    <div class="tile"><b id="t-ent">–</b><span>entities</span></div>
+    <div class="tile"><b id="t-obs">–</b><span>facts</span></div>
+    <div class="tile"><b id="t-rel">–</b><span>relations</span></div>
+  </div>
+</header>
+<main>
+  <div id="graphwrap">
+    <canvas id="graph"></canvas>
+    <button id="fitbtn" class="on" title="Zoom to fit the whole graph">⤢ Fit</button>
+    <div id="legend" hidden></div>
+    <div id="empty">
+      <b>No memories yet</b>
+      <div>Ask your agent to store something, e.g.<br>“Remember that the hero of our story is called Aria.”</div>
+    </div>
+    <div id="tip"></div>
+  </div>
+  <aside>
+    <div class="tabs">
+      <button id="tab-log" class="on">Activity log</button>
+      <button id="tab-ent">Entities</button>
+      <button id="tab-det">Details</button>
+    </div>
+    <div class="pane on" id="pane-log">
+      <div id="logchips">
+        <button class="fchip on" data-k="all">All</button>
+        <button class="fchip" data-k="tool">Tools</button>
+        <button class="fchip" data-k="agent">Agents</button>
+        <button class="fchip" data-k="server">Server</button>
+        <button class="fchip" data-k="debug">Debug</button>
+        <button class="fchip" data-k="error">Errors</button>
+      </div>
+      <div id="loglist"><div class="hint">Waiting for activity…</div></div>
+    </div>
+    <div class="pane" id="pane-ent">
+      <input id="entfilter" type="search" placeholder="Filter by name, type or fact text…">
+      <div id="entlist"></div>
+    </div>
+    <div class="pane" id="pane-det"><div id="details"><div class="hint">Click a node in the graph to inspect it.</div></div></div>
+  </aside>
+</main>
+<footer>
+  <span id="f-db"></span>
+  <span id="f-up"></span>
+  <span style="margin-left:auto">tools: remember · connect · recall · expand · find_nodes · search_facts · get_node · tree · read_graph · forget · list_workspaces · cleanup</span>
+</footer>
+
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <h3 id="modal-title">New node</h3>
+    <div id="modal-body"></div>
+    <div class="err" id="modal-err"></div>
+    <div class="modal-actions">
+      <button class="btn-sm" id="modal-cancel">Cancel</button>
+      <button class="btn-primary" id="modal-ok">Create</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+// ---------------------------------------------------------------- palette --
+// Categorical slots in fixed order (validated palette). Types beyond 8 fold
+// into muted gray rather than cycling hues.
+const SLOTS = ["--s1","--s2","--s3","--s4","--s5","--s6","--s7","--s8"];
+let typeColor = new Map();
+function assignTypeColors(entities) {
+  // stable assignment: order types by earliest entity creation time
+  const first = new Map();
+  for (const e of entities) {
+    const t = e.type || "note";
+    if (!first.has(t) || (e.created && e.created < first.get(t))) first.set(t, e.created || "");
+  }
+  const types = [...first.keys()].sort((a, b) =>
+    (first.get(a) || "").localeCompare(first.get(b) || "") || a.localeCompare(b));
+  typeColor = new Map();
+  types.forEach((t, i) => typeColor.set(t, i < SLOTS.length ? css(SLOTS[i]) : css("--ink-muted")));
+}
+const colorOf = (type) => typeColor.get(type || "note") || css("--ink-muted");
+
+// ------------------------------------------------------------- graph state --
+// Node identity is workspace-scoped ("workspace::name") since two workspaces
+// may legitimately have same-named entities (e.g. two projects each with a
+// "Chapter 1"). Display always uses the plain name.
+let nodes = new Map();   // "ws::name" -> {name,workspace,type,observations,x,y,vx,vy,fixed}
+let links = [];          // {from,to,type,workspace} (from/to are plain display names)
+let selected = null;     // "ws::name" of the selected node
+let alpha = 0;           // simulation heat
+let view = { x: 0, y: 0, k: 1 };  // pan/zoom
+let autoFit = true;      // keep the whole graph in view until the user takes over
+let lastGraphJson = "";
+let currentWorkspace = "all";
+const nodeKey = (ws, name) => `${ws}::${name}`;
+
+// editor state (details pane)
+let editMeta = false;        // name/type inputs shown?
+let editingObsId = null;     // fact currently being edited inline
+let treeDir = "out";         // tree view direction: out | in | both
+let pendingSelect = null;    // key to re-select after the next graph merge (e.g. after a rename)
+
+function fitView() {
+  if (!nodes.size) return;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const n of nodes.values()) {
+    if (n.x < minX) minX = n.x;
+    if (n.x > maxX) maxX = n.x;
+    if (n.y < minY) minY = n.y;
+    if (n.y > maxY) maxY = n.y;
+  }
+  const W = canvas.clientWidth, H = canvas.clientHeight, pad = 70;
+  const bw = maxX - minX + pad * 2, bh = maxY - minY + pad * 2;
+  const k = Math.min(1.5, Math.max(0.08, Math.min(W / bw, H / bh)));
+  view.k = k;
+  view.x = W / 2 - ((minX + maxX) / 2) * k;
+  view.y = H / 2 - ((minY + maxY) / 2) * k;
+}
+
+function setAutoFit(on) {
+  autoFit = on;
+  $("fitbtn").classList.toggle("on", on);
+}
+
+function mergeGraph(data) {
+  assignTypeColors(data.entities);
+  const seen = new Set();
+  const W = canvas.clientWidth || 800, H = canvas.clientHeight || 600;
+  for (const e of data.entities) {
+    const key = nodeKey(e.workspace, e.name);
+    seen.add(key);
+    const n = nodes.get(key);
+    if (n) { Object.assign(n, e); }
+    else {
+      // place newcomers near an already-known neighbor if possible, otherwise
+      // on a ring that grows with graph size (a tight heap explodes the layout)
+      const ringR = 30 * Math.sqrt(nodes.size + 1) + Math.random() * 60;
+      const ang = Math.random() * Math.PI * 2;
+      let px = W / 2 + Math.cos(ang) * ringR;
+      let py = H / 2 + Math.sin(ang) * ringR;
+      const rel = data.relations.find(r => r.workspace === e.workspace && (r.from === e.name || r.to === e.name));
+      if (rel) {
+        const otherKey = nodeKey(e.workspace, rel.from === e.name ? rel.to : rel.from);
+        const other = nodes.get(otherKey);
+        if (other) { px = other.x + (Math.random() - 0.5) * 90; py = other.y + (Math.random() - 0.5) * 90; }
+      }
+      nodes.set(key, { ...e, key, x: px, y: py, vx: 0, vy: 0, fixed: false });
+    }
+  }
+  for (const key of [...nodes.keys()]) if (!seen.has(key)) nodes.delete(key);
+  links = data.relations
+    .map(r => ({ ...r, fromKey: nodeKey(r.workspace, r.from), toKey: nodeKey(r.workspace, r.to) }))
+    .filter(r => nodes.has(r.fromKey) && nodes.has(r.toKey));
+  const deg = new Map();
+  for (const l of links) {
+    deg.set(l.fromKey, (deg.get(l.fromKey) || 0) + 1);
+    deg.set(l.toKey, (deg.get(l.toKey) || 0) + 1);
+  }
+  for (const [key, n] of nodes) n.deg = deg.get(key) || 0;
+  alpha = Math.max(alpha, 0.9);
+  $("empty").style.display = nodes.size ? "none" : "flex";
+  renderLegend();
+  renderEntList();
+  if (pendingSelect && nodes.has(pendingSelect)) { selected = pendingSelect; pendingSelect = null; }
+  if (selected && !nodes.has(selected)) { selected = null; renderDetails(); }
+  else if (selected) renderDetails();
+}
+
+// --------------------------------------------------------------- simulation --
+function step() {
+  if (alpha < 0.005) return;
+  const ns = [...nodes.values()];
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  // repulsion
+  for (let i = 0; i < ns.length; i++) {
+    for (let j = i + 1; j < ns.length; j++) {
+      const a = ns[i], b = ns[j];
+      let dx = a.x - b.x, dy = a.y - b.y;
+      let d2 = dx * dx + dy * dy || 1;
+      if (d2 > 250000) continue;
+      const d = Math.sqrt(d2);
+      // cap the close-range force or piled-up nodes catapult each other away
+      const f = 2600 / Math.max(d2, 900) * alpha;
+      dx /= d; dy /= d;
+      if (!a.fixed) { a.vx += dx * f; a.vy += dy * f; }
+      if (!b.fixed) { b.vx -= dx * f; b.vy -= dy * f; }
+    }
+  }
+  // springs
+  for (const l of links) {
+    const a = nodes.get(l.fromKey), b = nodes.get(l.toKey);
+    let dx = b.x - a.x, dy = b.y - a.y;
+    const d = Math.sqrt(dx * dx + dy * dy) || 1;
+    const f = (d - 130) * 0.02 * alpha;
+    dx /= d; dy /= d;
+    if (!a.fixed) { a.vx += dx * f * d * 0.02; a.vy += dy * f * d * 0.02; }
+    if (!b.fixed) { b.vx -= dx * f * d * 0.02; b.vy -= dy * f * d * 0.02; }
+  }
+  // gravity toward center + integrate, with a speed cap for stability
+  for (const n of ns) {
+    if (!n.fixed) {
+      n.vx += (W / 2 - n.x) * 0.004 * alpha;
+      n.vy += (H / 2 - n.y) * 0.004 * alpha;
+      n.vx *= 0.85; n.vy *= 0.85;
+      const sp = Math.hypot(n.vx, n.vy);
+      if (sp > 30) { n.vx *= 30 / sp; n.vy *= 30 / sp; }
+      n.x += n.vx; n.y += n.vy;
+    }
+  }
+  alpha *= 0.985;
+}
+
+// ------------------------------------------------------------------ render --
+const canvas = $("graph");
+const ctx = canvas.getContext("2d");
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.clientWidth * dpr;
+  canvas.height = canvas.clientHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener("resize", () => { resize(); alpha = Math.max(alpha, 0.3); });
+
+function radius(n) { return 7 + Math.min(9, (n.observations?.length || 0) * 1.2); }
+
+function draw() {
+  step();
+  if (autoFit) fitView();
+  ctx.save();
+  ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+  ctx.translate(view.x, view.y);
+  ctx.scale(view.k, view.k);
+  const inkMuted = css("--ink-muted"), grid = css("--baseline");
+  // edges
+  ctx.lineWidth = 1.5 / view.k;
+  for (const l of links) {
+    const a = nodes.get(l.fromKey), b = nodes.get(l.toKey);
+    const hot = selected && (l.fromKey === selected || l.toKey === selected);
+    ctx.strokeStyle = hot ? css("--accent") : grid;
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    // arrowhead
+    const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1;
+    const tx = b.x - dx / d * (radius(b) + 4), ty = b.y - dy / d * (radius(b) + 4);
+    const ang = Math.atan2(dy, dx);
+    ctx.fillStyle = hot ? css("--accent") : grid;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx - 7 * Math.cos(ang - 0.42), ty - 7 * Math.sin(ang - 0.42));
+    ctx.lineTo(tx - 7 * Math.cos(ang + 0.42), ty - 7 * Math.sin(ang + 0.42));
+    ctx.fill();
+    // relation label
+    if (hot || (view.k > 0.55 && links.length < 120)) {
+      ctx.fillStyle = hot ? css("--ink-2") : inkMuted;
+      ctx.font = `${10.5 / view.k}px system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText(l.type, (a.x + b.x) / 2, (a.y + b.y) / 2 - 4 / view.k);
+    }
+  }
+  // nodes
+  for (const n of nodes.values()) {
+    const r = radius(n);
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = colorOf(n.type);
+    ctx.fill();
+    // 2px surface ring so overlapping marks stay separable
+    ctx.lineWidth = (n.key === selected ? 3 : 2) / view.k;
+    ctx.strokeStyle = n.key === selected ? css("--ink-1") : css("--surface-1");
+    ctx.stroke();
+    // zoomed out on a big graph, label only hubs and the selection to avoid soup
+    const minDeg = (view.k > 0.7 || nodes.size <= 60) ? 0 : view.k > 0.4 ? 4 : 7;
+    if ((n.deg || 0) >= minDeg || n.key === selected) {
+      ctx.fillStyle = css("--ink-1");
+      ctx.font = `600 ${12 / view.k}px system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText(n.name, n.x, n.y - r - 6 / view.k);
+    }
+  }
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+
+// ------------------------------------------------------------- interaction --
+function toWorld(mx, my) { return { x: (mx - view.x) / view.k, y: (my - view.y) / view.k }; }
+function nodeAt(mx, my) {
+  const p = toWorld(mx, my);
+  for (const n of [...nodes.values()].reverse()) {
+    if (Math.hypot(n.x - p.x, n.y - p.y) <= radius(n) + 4) return n; // padded hit target
+  }
+  return null;
+}
+let drag = null, panning = null;
+canvas.addEventListener("mousedown", (e) => {
+  setAutoFit(false);
+  const n = nodeAt(e.offsetX, e.offsetY);
+  if (n) { drag = n; n.fixed = true; }
+  else panning = { mx: e.offsetX, my: e.offsetY, vx: view.x, vy: view.y };
+});
+canvas.addEventListener("mousemove", (e) => {
+  if (drag) {
+    const p = toWorld(e.offsetX, e.offsetY);
+    drag.x = p.x; drag.y = p.y; alpha = Math.max(alpha, 0.25);
+  } else if (panning) {
+    view.x = panning.vx + (e.offsetX - panning.mx);
+    view.y = panning.vy + (e.offsetY - panning.my);
+  } else {
+    const n = nodeAt(e.offsetX, e.offsetY);
+    canvas.style.cursor = n ? "pointer" : "grab";
+    const tip = $("tip");
+    if (n) {
+      tip.style.display = "block";
+      tip.style.left = (e.offsetX + 14) + "px";
+      tip.style.top = (e.offsetY + 10) + "px";
+      tip.innerHTML = `<b></b><span></span>`;
+      tip.querySelector("b").textContent = n.name;
+      const wsTag = currentWorkspace === "all" ? `${n.workspace} · ` : "";
+      tip.querySelector("span").textContent =
+        `${wsTag}${n.type || "note"} · ${(n.observations || []).length} fact(s) — click to inspect`;
+    } else tip.style.display = "none";
+  }
+});
+window.addEventListener("mouseup", (e) => {
+  if (drag) {
+    const moved = Math.hypot(drag.vx, drag.vy) > 0.5;
+    drag.fixed = false;
+    if (canvas.contains(e.target)) { selected = drag.key; renderDetails(); showTab("det"); }
+    drag = null; alpha = Math.max(alpha, 0.2);
+  }
+  panning = null;
+});
+canvas.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  setAutoFit(false);
+  const k = Math.min(3, Math.max(0.08, view.k * (e.deltaY < 0 ? 1.12 : 0.9)));
+  const p = toWorld(e.offsetX, e.offsetY);
+  view.x = e.offsetX - p.x * k;
+  view.y = e.offsetY - p.y * k;
+  view.k = k;
+}, { passive: false });
+
+// ------------------------------------------------------------------ panels --
+function showTab(which) {
+  for (const t of ["log", "ent", "det"]) {
+    $("tab-" + t).classList.toggle("on", t === which);
+    $("pane-" + t).classList.toggle("on", t === which);
+  }
+}
+$("tab-log").onclick = () => showTab("log");
+$("tab-ent").onclick = () => showTab("ent");
+$("tab-det").onclick = () => showTab("det");
+
+function renderLegend() {
+  const el = $("legend");
+  el.innerHTML = "";
+  if (typeColor.size === 0) { el.hidden = true; return; }
+  el.hidden = false;
+  for (const [t, c] of typeColor) {
+    const row = document.createElement("div");
+    row.className = "row";
+    const sw = document.createElement("span");
+    sw.className = "sw"; sw.style.background = c;
+    row.appendChild(sw);
+    row.appendChild(document.createTextNode(t));
+    el.appendChild(row);
+  }
+}
+
+function renderEntList() {
+  const q = $("entfilter").value.toLowerCase();
+  const el = $("entlist");
+  el.innerHTML = "";
+  const list = [...nodes.values()]
+    .filter(n => !q
+      || n.name.toLowerCase().includes(q)
+      || (n.type || "").toLowerCase().includes(q)
+      || (n.observations || []).some(o => (o.text || "").toLowerCase().includes(q)))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  for (const n of list) {
+    const row = document.createElement("div");
+    row.className = "entrow";
+    const sw = document.createElement("span");
+    sw.className = "sw"; sw.style.background = colorOf(n.type);
+    const nm = document.createElement("span");
+    nm.className = "nm"; nm.textContent = n.name;
+    const ty = document.createElement("span");
+    ty.className = "ty"; ty.textContent = currentWorkspace === "all" ? `${n.workspace} · ${n.type || "note"}` : (n.type || "note");
+    const ct = document.createElement("span");
+    ct.className = "ct"; ct.textContent = (n.observations || []).length;
+    row.append(sw, nm, ty, ct);
+    row.onclick = () => { selected = n.key; centerOn(n); renderDetails(); showTab("det"); };
+    el.appendChild(row);
+  }
+  if (!list.length) el.innerHTML = '<div class="hint">No entities match.</div>';
+}
+$("entfilter").addEventListener("input", renderEntList);
+
+function centerOn(n) {
+  setAutoFit(false);
+  if (view.k < 0.5) view.k = 0.8;
+  view.x = canvas.clientWidth / 2 - n.x * view.k;
+  view.y = canvas.clientHeight / 2 - n.y * view.k;
+}
+$("fitbtn").onclick = () => setAutoFit(true);
+
+// --- editor helpers --------------------------------------------------------
+// Every mutation goes through the daemon's /api/edit endpoint, then we force a
+// refresh so the graph, tiles and details reflect the change immediately.
+async function edit(body) {
+  const r = await fetch("/api/edit", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const j = await r.json().catch(() => ({ error: "bad response" }));
+  if (!r.ok || j.error) throw new Error(j.error || "edit failed");
+  lastGraphJson = "";
+  await poll();
+  return j;
+}
+function selectKey(key) {
+  const n = nodes.get(key);
+  selected = key;
+  editMeta = false; editingObsId = null;
+  if (n) centerOn(n);
+  renderDetails();
+}
+
+function mkBtn(label, cls, onclick, title) {
+  const b = document.createElement("button");
+  b.className = cls; b.textContent = label; b.onclick = onclick;
+  if (title) b.title = title;
+  return b;
+}
+
+function renderDetails() {
+  const el = $("details");
+  if (!selected || !nodes.has(selected)) {
+    el.innerHTML = '<div class="hint">Click a node in the graph to inspect it, or use ＋ New node.</div>';
+    return;
+  }
+  const n = nodes.get(selected);
+  const ws = n.workspace || "default";
+  el.innerHTML = "";
+
+  // --- title + type/workspace chips ---
+  const h2 = document.createElement("h2");
+  h2.textContent = n.name;
+  const chip = document.createElement("span");
+  chip.className = "chip"; chip.textContent = n.type || "note";
+  chip.style.borderColor = colorOf(n.type);
+  h2.appendChild(chip);
+  const wsChip = document.createElement("span");
+  wsChip.className = "chip"; wsChip.textContent = ws;
+  h2.appendChild(wsChip);
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.textContent = `id ${n.id ?? "?"} · created ${fmt(n.created)} · updated ${fmt(n.updated)}`;
+  el.append(h2, meta);
+
+  // --- edit / delete actions ---
+  const actions = document.createElement("div");
+  actions.className = "detail-actions";
+  actions.append(
+    mkBtn(editMeta ? "Close edit" : "✎ Edit", "btn-sm", () => { editMeta = !editMeta; renderDetails(); }),
+    mkBtn("🗑 Delete node", "btn-sm danger", async () => {
+      if (!confirm(`Delete node "${n.name}" and all its facts and relations?`)) return;
+      try { selected = null; await edit({ op: "delete_entity", workspace: ws, name: n.name }); }
+      catch (e) { alert(e.message); }
+    })
+  );
+  el.appendChild(actions);
+
+  if (editMeta) {
+    const row = document.createElement("div");
+    row.className = "edit-row";
+    const nameIn = document.createElement("input"); nameIn.value = n.name; nameIn.placeholder = "name";
+    const typeIn = document.createElement("input"); typeIn.value = n.type || "note"; typeIn.placeholder = "type";
+    row.append(nameIn, typeIn, mkBtn("Save", "btn-sm", async () => {
+      const newName = nameIn.value.trim(), newType = typeIn.value.trim() || "note";
+      try {
+        if (newType !== (n.type || "note")) await edit({ op: "set_type", workspace: ws, name: n.name, type: newType });
+        if (newName && newName !== n.name) {
+          await edit({ op: "rename_entity", workspace: ws, name: n.name, newName });
+          pendingSelect = nodeKey(ws, newName);
+        }
+        editMeta = false; renderDetails();
+      } catch (e) { alert(e.message); }
+    }));
+    el.appendChild(row);
+  }
+
+  // --- facts ---
+  const obs = n.observations || [];
+  const h3o = document.createElement("h3");
+  h3o.textContent = `Facts (${obs.length})`;
+  const addFactBtn = mkBtn("＋", "btn-sm h3btn", () => {
+    const form = $("addfactform");
+    if (form) { form.querySelector("input").focus(); }
+  }, "Add a fact");
+  h3o.appendChild(addFactBtn);
+  el.appendChild(h3o);
+  if (!obs.length) el.insertAdjacentHTML("beforeend", '<div class="hint">No facts stored.</div>');
+  for (const o of obs) {
+    const d = document.createElement("div");
+    d.className = "obs";
+    d.style.borderLeftColor = colorOf(n.type);
+    d.appendChild(mkBtn("×", "del", async () => {
+      try { await edit({ op: "delete_observation", id: o.id }); } catch (e) { alert(e.message); }
+    }, "Delete fact"));
+    if (editingObsId === o.id) {
+      const inp = document.createElement("input");
+      inp.value = o.text; inp.style.width = "78%";
+      const save = async () => {
+        const t = inp.value.trim();
+        editingObsId = null;
+        if (t && t !== o.text) { try { await edit({ op: "update_observation", id: o.id, text: t }); } catch (e) { alert(e.message); } }
+        else renderDetails();
+      };
+      inp.onkeydown = (ev) => { if (ev.key === "Enter") save(); if (ev.key === "Escape") { editingObsId = null; renderDetails(); } };
+      inp.onblur = save;
+      d.appendChild(inp);
+      el.appendChild(d);
+      setTimeout(() => inp.focus(), 0);
+      continue;
+    }
+    const txt = document.createElement("span");
+    txt.className = "txt"; txt.textContent = o.text + " ";
+    txt.title = "Click to edit";
+    txt.onclick = () => { editingObsId = o.id; renderDetails(); };
+    const small = document.createElement("small");
+    small.textContent = `#${o.id}`;
+    d.append(txt, small);
+    el.appendChild(d);
+  }
+  // add-fact form
+  const aff = document.createElement("div");
+  aff.className = "addform"; aff.id = "addfactform";
+  const factInp = document.createElement("input"); factInp.placeholder = "Add a fact…";
+  const addFact = async () => {
+    const t = factInp.value.trim(); if (!t) return;
+    try { await edit({ op: "add_observation", workspace: ws, entity: n.name, text: t }); } catch (e) { alert(e.message); }
+  };
+  factInp.onkeydown = (ev) => { if (ev.key === "Enter") addFact(); };
+  aff.append(factInp, mkBtn("Add", "btn-sm", addFact));
+  el.appendChild(aff);
+
+  // --- relations ---
+  const rels = links.filter(l => l.fromKey === n.key || l.toKey === n.key);
+  const h3r = document.createElement("h3");
+  h3r.textContent = `Relations (${rels.length})`;
+  el.appendChild(h3r);
+  if (!rels.length) el.insertAdjacentHTML("beforeend", '<div class="hint">No relations.</div>');
+  for (const r of rels) {
+    const d = document.createElement("div");
+    d.className = "rel";
+    const arrowIn = r.toKey === n.key;
+    const otherKey = arrowIn ? r.fromKey : r.toKey;
+    const otherNode = nodes.get(otherKey);
+    const otherName = otherNode ? otherNode.name : (arrowIn ? r.from : r.to);
+    d.appendChild(mkBtn("×", "del", async () => {
+      try { await edit({ op: "delete_relation", workspace: ws, from: r.from, to: r.to, relation_type: r.type }); }
+      catch (e) { alert(e.message); }
+    }, "Delete relation"));
+    const a = document.createElement("a");
+    a.textContent = otherName;
+    a.onclick = () => { if (otherNode) selectKey(otherKey); };
+    const rt = document.createElement("span");
+    rt.className = "rt"; rt.textContent = ` ${r.type} `;
+    if (arrowIn) { d.append(a, rt, document.createTextNode("→ this")); }
+    else { d.append(document.createTextNode("this "), rt, document.createTextNode("→ "), a); }
+    el.appendChild(d);
+  }
+  // add-relation form
+  const arf = document.createElement("div");
+  arf.className = "addform";
+  const relType = document.createElement("input"); relType.placeholder = "relation (e.g. knows)"; relType.style.maxWidth = "42%";
+  const relTo = document.createElement("input"); relTo.placeholder = "target entity";
+  relTo.setAttribute("list", "entnames");
+  const addRel = async () => {
+    const t = relType.value.trim(), tgt = relTo.value.trim();
+    if (!t || !tgt) return;
+    try { await edit({ op: "add_relation", workspace: ws, from: n.name, to: tgt, type: t }); relType.value = ""; relTo.value = ""; }
+    catch (e) { alert(e.message); }
+  };
+  relTo.onkeydown = (ev) => { if (ev.key === "Enter") addRel(); };
+  arf.append(relType, relTo, mkBtn("Add →", "btn-sm", addRel));
+  el.appendChild(arf);
+  // datalist of same-workspace entity names for the target field
+  let dl = $("entnames");
+  if (!dl) { dl = document.createElement("datalist"); dl.id = "entnames"; el.appendChild(dl); }
+  dl.innerHTML = "";
+  for (const m of nodes.values()) if (m.workspace === ws && m.name !== n.name) {
+    const o = document.createElement("option"); o.value = m.name; dl.appendChild(o);
+  }
+  el.appendChild(dl);
+
+  // --- tree ---
+  const h3t = document.createElement("h3");
+  h3t.textContent = "Tree";
+  const dirSel = document.createElement("select");
+  dirSel.id = "treedir";
+  for (const d of ["out", "in", "both"]) {
+    const o = document.createElement("option"); o.value = d; o.textContent = d; if (d === treeDir) o.selected = true;
+    dirSel.appendChild(o);
+  }
+  dirSel.onchange = () => { treeDir = dirSel.value; renderDetails(); };
+  h3t.appendChild(dirSel);
+  el.appendChild(h3t);
+  const treeWrap = document.createElement("div");
+  treeWrap.className = "tree";
+  const root = buildSubtree(n.key, 3, treeDir, new Set());
+  const rootUl = document.createElement("ul");
+  rootUl.appendChild(renderTreeNode(root, null, null));
+  treeWrap.appendChild(rootUl);
+  if (!root || !root.children || !root.children.length) {
+    treeWrap.insertAdjacentHTML("beforeend", `<div class="hint">No ${treeDir === "in" ? "incoming" : treeDir === "both" ? "" : "outgoing"} relations to branch from.</div>`);
+  }
+  el.appendChild(treeWrap);
+}
+
+// Build a nested tree from the in-memory graph (links/nodes), matching the
+// server-side `tree` tool: follow edges in `dir`, cut cycles with `repeated`.
+function buildSubtree(rootKey, depth, dir, expanded) {
+  const n = nodes.get(rootKey);
+  if (!n) return null;
+  const node = { key: rootKey, name: n.name, type: n.type, facts: (n.observations || []).length, children: [] };
+  if (expanded.has(rootKey)) { node.repeated = true; return node; }
+  expanded.add(rootKey);
+  if (depth <= 0) return node;
+  for (const l of links) {
+    const isOut = l.fromKey === rootKey, isIn = l.toKey === rootKey;
+    if (!isOut && !isIn) continue;
+    if (dir === "out" && !isOut) continue;
+    if (dir === "in" && !isIn) continue;
+    const childKey = isOut ? l.toKey : l.fromKey;
+    if (childKey === rootKey) continue;
+    const child = buildSubtree(childKey, depth - 1, dir, expanded);
+    if (child) node.children.push({ relation: l.type, dir: isOut ? "out" : "in", node: child });
+  }
+  return node;
+}
+
+function renderTreeNode(node, relation, dir) {
+  const li = document.createElement("li");
+  if (!node) { li.textContent = "—"; return li; }
+  if (relation) {
+    const r = document.createElement("span");
+    r.className = "trel"; r.textContent = `${dir === "in" ? "←" : "→"} ${relation}: `;
+    li.appendChild(r);
+  }
+  const dot = document.createElement("span");
+  dot.className = "tdot"; dot.style.background = colorOf(node.type);
+  li.appendChild(dot);
+  const a = document.createElement("span");
+  a.className = "tnode"; a.textContent = `${node.name} (${node.facts})`;
+  a.onclick = () => selectKey(node.key);
+  li.appendChild(a);
+  if (node.repeated) { const rep = document.createElement("span"); rep.className = "rep"; rep.textContent = " ↺"; li.appendChild(rep); }
+  if (node.children && node.children.length) {
+    const ul = document.createElement("ul");
+    for (const c of node.children) ul.appendChild(renderTreeNode(c.node, c.relation, c.dir));
+    li.appendChild(ul);
+  }
+  return li;
+}
+
+function fmt(iso) {
+  if (!iso) return "?";
+  try { return new Date(iso).toLocaleString(); } catch { return iso; }
+}
+
+// -------------------------------------------------------------------- logs --
+let lastSeq = 0, logsStarted = false, logFilter = "all";
+const allLogs = [];
+const KNOWN_KINDS = ["tool", "agent", "server", "debug", "error"];
+const kindOf = (e) => (KNOWN_KINDS.includes(e.kind) ? e.kind : e.kind === "note" ? "debug" : "server");
+const passes = (e) => logFilter === "all" || kindOf(e) === logFilter;
+
+function logLine(e) {
+  const d = document.createElement("div");
+  d.className = "logline";
+  const t = document.createElement("time");
+  t.textContent = new Date(e.ts).toLocaleTimeString();
+  const k = document.createElement("span");
+  k.className = "kind " + kindOf(e);
+  k.textContent = e.kind === "error" ? "✕ error" : e.kind;
+  d.append(t, k, document.createTextNode(e.message));
+  if (e.data && e.data.args && Object.keys(e.data.args).length) {
+    const a = document.createElement("span");
+    a.className = "args";
+    let s = JSON.stringify(e.data.args);
+    if (s.length > 220) s = s.slice(0, 220) + "…";
+    a.textContent = s;
+    d.appendChild(a);
+  }
+  if (e.data && typeof e.data.result === "string") {
+    const r = document.createElement("span");
+    r.className = "args result";
+    let s = e.data.result.replace(/\s+/g, " ");
+    if (s.length > 200) s = s.slice(0, 200) + "…";
+    r.textContent = "→ " + s;
+    d.appendChild(r);
+  }
+  return d;
+}
+
+function renderLog(entries) {
+  const pane = $("pane-log"), list = $("loglist");
+  if (!logsStarted && entries.length) { list.innerHTML = ""; logsStarted = true; }
+  const stick = pane.scrollTop + pane.clientHeight >= pane.scrollHeight - 30;
+  for (const e of entries) {
+    allLogs.push(e);
+    if (passes(e)) list.appendChild(logLine(e));
+  }
+  while (allLogs.length > 1000) allLogs.shift();
+  while (list.children.length > 500) list.removeChild(list.firstChild);
+  if (stick && entries.length) pane.scrollTop = pane.scrollHeight;
+}
+
+function rebuildLog() {
+  const list = $("loglist");
+  list.innerHTML = "";
+  const shown = allLogs.filter(passes).slice(-500);
+  for (const e of shown) list.appendChild(logLine(e));
+  if (!shown.length) list.innerHTML = '<div class="hint">Nothing logged for this filter yet.</div>';
+  $("pane-log").scrollTop = $("pane-log").scrollHeight;
+}
+
+for (const b of document.querySelectorAll("#logchips .fchip")) {
+  b.onclick = () => {
+    logFilter = b.dataset.k;
+    for (const x of document.querySelectorAll("#logchips .fchip")) x.classList.toggle("on", x === b);
+    rebuildLog();
+  };
+}
+
+// ------------------------------------------------------------- workspaces --
+let workspacesKnown = [];
+async function refreshWorkspacePicker() {
+  try {
+    const { workspaces } = await fetch("/api/workspaces").then(r => r.json());
+    const sig = JSON.stringify(workspaces);
+    if (sig === JSON.stringify(workspacesKnown)) return;
+    workspacesKnown = workspaces;
+    const sel = $("wspick");
+    const prev = sel.value || "all";
+    sel.innerHTML = "";
+    const optAll = document.createElement("option");
+    optAll.value = "all"; optAll.textContent = `All workspaces (${workspaces.reduce((n, w) => n + w.entities, 0)})`;
+    sel.appendChild(optAll);
+    for (const w of workspaces) {
+      const o = document.createElement("option");
+      o.value = w.workspace; o.textContent = `${w.workspace} (${w.entities})`;
+      sel.appendChild(o);
+    }
+    if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  } catch { /* daemon offline; poll() already surfaces that */ }
+}
+$("wspick").addEventListener("change", () => {
+  currentWorkspace = $("wspick").value;
+  lastGraphJson = ""; // force a re-render even if the raw payload is unchanged
+  setAutoFit(true);
+  poll();
+});
+
+$("cleanupbtn").addEventListener("click", async () => {
+  const btn = $("cleanupbtn");
+  btn.disabled = true;
+  btn.textContent = "Cleaning…";
+  try {
+    const body = currentWorkspace === "all" ? {} : { workspace: currentWorkspace };
+    const r = await fetch("/api/cleanup", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const res = await r.json();
+    btn.textContent = `Removed ${res.duplicateObservationsRemoved + res.orphanObservationsRemoved}`;
+    lastGraphJson = "";
+    await poll();
+  } catch {
+    btn.textContent = "Failed";
+  } finally {
+    setTimeout(() => { btn.textContent = "Clean up"; btn.disabled = false; }, 2500);
+  }
+});
+
+// ------------------------------------------------------------- new node --
+const modal = $("modal");
+function closeModal() { modal.classList.remove("on"); }
+function openNewNode() {
+  $("modal-title").textContent = "New node";
+  $("modal-ok").textContent = "Create";
+  $("modal-err").textContent = "";
+  const defWs = currentWorkspace === "all" ? "default" : currentWorkspace;
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  $("modal-body").innerHTML =
+    '<label>Name</label><input id="m-name" placeholder="e.g. Aria Voss">' +
+    '<label>Type</label><input id="m-type" placeholder="e.g. character" value="note">' +
+    '<label>Workspace</label><input id="m-ws" value="' + esc(defWs) + '">' +
+    '<label>First fact (optional)</label><textarea id="m-fact" placeholder="One atomic fact…"></textarea>';
+  modal.classList.add("on");
+  setTimeout(() => $("m-name").focus(), 0);
+}
+$("newbtn").onclick = openNewNode;
+$("modal-cancel").onclick = closeModal;
+modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modal.classList.contains("on")) closeModal(); });
+$("modal-ok").onclick = async () => {
+  const name = $("m-name").value.trim();
+  const type = $("m-type").value.trim() || "note";
+  const ws = $("m-ws").value.trim() || "default";
+  const fact = $("m-fact").value.trim();
+  if (!name) { $("modal-err").textContent = "Name is required."; return; }
+  try {
+    await edit({ op: "create_entity", workspace: ws, name, type, observations: fact ? [fact] : [] });
+    closeModal();
+    if (currentWorkspace !== "all") currentWorkspace = ws;
+    pendingSelect = nodeKey(ws, name);
+    lastGraphJson = "";
+    setAutoFit(true);
+    await poll();
+    if (currentWorkspace !== "all") $("wspick").value = currentWorkspace;
+  } catch (e) { $("modal-err").textContent = e.message; }
+};
+
+// ----------------------------------------------------------------- polling --
+async function poll() {
+  try {
+    const wsQuery = currentWorkspace === "all" ? "" : `?workspace=${encodeURIComponent(currentWorkspace)}`;
+    const [g, l, s] = await Promise.all([
+      fetch(`/api/graph${wsQuery}`).then(r => r.json()),
+      fetch(`/api/logs?after=${lastSeq}`).then(r => r.json()),
+      fetch(`/api/stats${wsQuery}`).then(r => r.json()),
+    ]);
+    refreshWorkspacePicker();
+    const gj = JSON.stringify(g);
+    if (gj !== lastGraphJson) { lastGraphJson = gj; mergeGraph(g); }
+    if (l.entries.length) { renderLog(l.entries); lastSeq = l.entries[l.entries.length - 1].seq; }
+    else lastSeq = Math.max(lastSeq, l.last || 0);
+    $("t-ent").textContent = s.entities;
+    $("t-obs").textContent = s.observations;
+    $("t-rel").textContent = s.relations;
+    $("f-db").textContent = "db: " + s.db_path;
+    $("f-up").textContent = `daemon pid ${s.pid} · up since ${fmt(s.started)}`;
+    $("conndot").classList.remove("err");
+    $("conntext").textContent = "connected";
+  } catch {
+    $("conndot").classList.add("err");
+    $("conntext").textContent = "daemon offline";
+  }
+  setTimeout(poll, 2000);
+}
+
+resize();
+requestAnimationFrame(draw);
+poll();
+</script>
+</body>
+</html>
