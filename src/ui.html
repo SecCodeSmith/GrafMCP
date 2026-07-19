@@ -57,11 +57,12 @@
     padding: 5px 10px; border: 1px solid var(--baseline); border-radius: 8px;
     background: var(--page); color: var(--ink-1); font: 600 12.5px system-ui, sans-serif;
   }
-  #cleanupbtn, #newbtn {
+  #cleanupbtn, #newbtn, #wsswitch, #wsdelbtn {
     padding: 5px 12px; border: 1px solid var(--baseline); border-radius: 8px;
     background: var(--page); color: var(--ink-2); font: 600 12.5px system-ui, sans-serif; cursor: pointer;
   }
-  #cleanupbtn:hover, #newbtn:hover { border-color: var(--accent); color: var(--accent); }
+  #cleanupbtn:hover, #newbtn:hover, #wsswitch:hover { border-color: var(--accent); color: var(--accent); }
+  #wsdelbtn:hover { border-color: var(--critical); color: var(--critical); }
   #cleanupbtn:disabled { opacity: .5; cursor: default; }
   #newbtn { border-color: var(--accent); color: var(--accent); }
   .tiles { display: flex; gap: 10px; margin-left: auto; }
@@ -233,6 +234,19 @@
     border: 1px solid var(--accent); background: var(--accent); color: #fff;
     border-radius: 7px; padding: 6px 15px; font: 600 12.5px system-ui, sans-serif; cursor: pointer;
   }
+
+  /* ---- workspace chooser ---- */
+  .wsrow {
+    display: flex; align-items: center; gap: 10px; padding: 9px 10px;
+    border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; cursor: pointer;
+  }
+  .wsrow:hover { border-color: var(--accent); }
+  .wsrow .nm { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wsrow .ct { color: var(--ink-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+  /* legend rows double as type filters */
+  #legend .row { cursor: pointer; user-select: none; }
+  #legend .row.off { opacity: .38; text-decoration: line-through; }
   footer {
     padding: 5px 16px; font-size: 11.5px; color: var(--ink-muted);
     border-top: 1px solid var(--border); background: var(--surface-1);
@@ -244,7 +258,9 @@
 <header>
   <h1>GrafMCP <span>· graph memory for code agents</span></h1>
   <div id="conn"><span class="dot" id="conndot"></span><span id="conntext">connecting…</span></div>
-  <select id="wspick" title="Filter by workspace"><option value="all">All workspaces</option></select>
+  <select id="wspick" title="Current workspace"></select>
+  <button id="wsswitch" title="Choose, open or delete workspaces">Workspaces…</button>
+  <button id="wsdelbtn" title="Delete the current workspace and everything in it">🗑 Delete workspace</button>
   <button id="newbtn" title="Create a new node">＋ New node</button>
   <button id="cleanupbtn" title="Remove exact-duplicate facts and orphaned records">Clean up</button>
   <div class="tiles">
@@ -306,6 +322,20 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="wsmodal">
+  <div class="modal">
+    <h3>Choose a workspace</h3>
+    <div id="wslist" style="max-height:48vh;overflow-y:auto;margin-top:10px"></div>
+    <label>Open another workspace by name</label>
+    <div class="addform" style="margin:4px 0 0">
+      <input id="ws-new" placeholder="e.g. my-project">
+      <button class="btn-sm" id="ws-open">Open</button>
+    </div>
+    <div class="err" id="ws-err"></div>
+    <div class="modal-actions"><button class="btn-sm" id="ws-cancel">Cancel</button></div>
+  </div>
+</div>
+
 <script>
 "use strict";
 const $ = (id) => document.getElementById(id);
@@ -341,7 +371,9 @@ let alpha = 0;           // simulation heat
 let view = { x: 0, y: 0, k: 1 };  // pan/zoom
 let autoFit = true;      // keep the whole graph in view until the user takes over
 let lastGraphJson = "";
-let currentWorkspace = "all";
+let currentWorkspace = null; // no default view — the chooser overlay picks one first
+let lastGraphData = null;    // last /api/graph payload, re-merged when type filters change
+let hiddenTypes = new Set(); // entity types toggled off via the legend
 const nodeKey = (ws, name) => `${ws}::${name}`;
 
 // editor state (details pane)
@@ -373,10 +405,12 @@ function setAutoFit(on) {
 }
 
 function mergeGraph(data) {
+  lastGraphData = data;
   assignTypeColors(data.entities);
   const seen = new Set();
   const W = canvas.clientWidth || 800, H = canvas.clientHeight || 600;
-  for (const e of data.entities) {
+  const shown = data.entities.filter(e => !hiddenTypes.has(e.type || "note"));
+  for (const e of shown) {
     const key = nodeKey(e.workspace, e.name);
     seen.add(key);
     const n = nodes.get(key);
@@ -563,9 +597,8 @@ canvas.addEventListener("mousemove", (e) => {
       tip.style.top = (e.offsetY + 10) + "px";
       tip.innerHTML = `<b></b><span></span>`;
       tip.querySelector("b").textContent = n.name;
-      const wsTag = currentWorkspace === "all" ? `${n.workspace} · ` : "";
       tip.querySelector("span").textContent =
-        `${wsTag}${n.type || "note"} · ${(n.observations || []).length} fact(s) — click to inspect`;
+        `${n.type || "note"} · ${(n.observations || []).length} fact(s) — click to inspect`;
     } else tip.style.display = "none";
   }
 });
@@ -606,11 +639,17 @@ function renderLegend() {
   el.hidden = false;
   for (const [t, c] of typeColor) {
     const row = document.createElement("div");
-    row.className = "row";
+    row.className = "row" + (hiddenTypes.has(t) ? " off" : "");
+    row.title = "Click to hide/show this type";
     const sw = document.createElement("span");
     sw.className = "sw"; sw.style.background = c;
     row.appendChild(sw);
     row.appendChild(document.createTextNode(t));
+    row.onclick = () => {
+      if (hiddenTypes.has(t)) hiddenTypes.delete(t); else hiddenTypes.add(t);
+      if (lastGraphData) mergeGraph(lastGraphData);
+      alpha = Math.max(alpha, 0.3);
+    };
     el.appendChild(row);
   }
 }
@@ -633,7 +672,7 @@ function renderEntList() {
     const nm = document.createElement("span");
     nm.className = "nm"; nm.textContent = n.name;
     const ty = document.createElement("span");
-    ty.className = "ty"; ty.textContent = currentWorkspace === "all" ? `${n.workspace} · ${n.type || "note"}` : (n.type || "note");
+    ty.className = "ty"; ty.textContent = n.type || "note";
     const ct = document.createElement("span");
     ct.className = "ct"; ct.textContent = (n.observations || []).length;
     row.append(sw, nm, ty, ct);
@@ -986,39 +1025,140 @@ for (const b of document.querySelectorAll("#logchips .fchip")) {
 
 // ------------------------------------------------------------- workspaces --
 let workspacesKnown = [];
+const wsmodal = $("wsmodal");
+
 async function refreshWorkspacePicker() {
   try {
     const { workspaces } = await fetch("/api/workspaces").then(r => r.json());
     const sig = JSON.stringify(workspaces);
     if (sig === JSON.stringify(workspacesKnown)) return;
     workspacesKnown = workspaces;
+    if (wsmodal.classList.contains("on")) renderWsList();
     const sel = $("wspick");
-    const prev = sel.value || "all";
     sel.innerHTML = "";
-    const optAll = document.createElement("option");
-    optAll.value = "all"; optAll.textContent = `All workspaces (${workspaces.reduce((n, w) => n + w.entities, 0)})`;
-    sel.appendChild(optAll);
+    const seen = new Set();
     for (const w of workspaces) {
       const o = document.createElement("option");
       o.value = w.workspace; o.textContent = `${w.workspace} (${w.entities})`;
-      sel.appendChild(o);
+      sel.appendChild(o); seen.add(w.workspace);
     }
-    if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+    // a freshly opened (still empty) workspace isn't in /api/workspaces yet
+    if (currentWorkspace && !seen.has(currentWorkspace)) {
+      const o = document.createElement("option");
+      o.value = currentWorkspace; o.textContent = `${currentWorkspace} (0)`;
+      sel.insertBefore(o, sel.firstChild);
+    }
+    if (currentWorkspace) sel.value = currentWorkspace;
   } catch { /* daemon offline; poll() already surfaces that */ }
 }
-$("wspick").addEventListener("change", () => {
-  currentWorkspace = $("wspick").value;
-  lastGraphJson = ""; // force a re-render even if the raw payload is unchanged
+$("wspick").addEventListener("change", () => chooseWorkspace($("wspick").value));
+
+function chooseWorkspace(ws) {
+  if (!ws) return;
+  currentWorkspace = ws;
+  hiddenTypes = new Set();
+  nodes.clear(); links = []; selected = null; lastGraphJson = ""; lastGraphData = null;
+  renderDetails();
+  wsmodal.classList.remove("on");
   setAutoFit(true);
+  const sel = $("wspick");
+  if (![...sel.options].some(o => o.value === ws)) {
+    const o = document.createElement("option");
+    o.value = ws; o.textContent = `${ws} (0)`;
+    sel.insertBefore(o, sel.firstChild);
+  }
+  sel.value = ws;
   poll();
+}
+
+function renderWsList() {
+  const el = $("wslist");
+  el.innerHTML = "";
+  if (!workspacesKnown.length) {
+    el.innerHTML = '<div class="hint">No workspaces yet — open one by name below (e.g. "default"); it exists for real once something is stored in it.</div>';
+    return;
+  }
+  for (const w of workspacesKnown) {
+    const row = document.createElement("div");
+    row.className = "wsrow";
+    const nm = document.createElement("span");
+    nm.className = "nm"; nm.textContent = w.workspace;
+    const ct = document.createElement("span");
+    ct.className = "ct"; ct.textContent = `${w.entities} entit${w.entities === 1 ? "y" : "ies"}`;
+    const del = mkBtn("🗑", "btn-sm danger", async (ev) => {
+      ev.stopPropagation();
+      if (!confirm(`Delete workspace "${w.workspace}" and all its ${w.entities} entities, facts and relations? This cannot be undone.`)) return;
+      try { await deleteWorkspaceByName(w.workspace); }
+      catch (e) { $("ws-err").textContent = e.message; }
+    }, "Delete this workspace");
+    row.append(nm, ct, del);
+    row.onclick = () => chooseWorkspace(w.workspace);
+    el.appendChild(row);
+  }
+}
+
+async function openWorkspaceChooser(closable) {
+  $("ws-err").textContent = "";
+  $("ws-cancel").style.display = closable ? "" : "none";
+  try {
+    const { workspaces } = await fetch("/api/workspaces").then(r => r.json());
+    workspacesKnown = workspaces;
+  } catch { /* daemon offline — show whatever we knew last */ }
+  renderWsList();
+  wsmodal.classList.add("on");
+}
+
+async function deleteWorkspaceByName(ws) {
+  const r = await fetch("/api/edit", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ op: "delete_workspace", workspace: ws }),
+  });
+  const j = await r.json().catch(() => ({ error: "bad response" }));
+  if (!r.ok || j.error) throw new Error(j.error || "delete failed");
+  workspacesKnown = workspacesKnown.filter(x => x.workspace !== ws);
+  if (wsmodal.classList.contains("on")) renderWsList();
+  if (currentWorkspace === ws) {
+    currentWorkspace = null;
+    nodes.clear(); links = []; selected = null; lastGraphJson = ""; lastGraphData = null;
+    typeColor = new Map();
+    renderLegend(); renderEntList(); renderDetails();
+    $("empty").style.display = "flex";
+    openWorkspaceChooser(false);
+  }
+  poll();
+}
+
+$("wsswitch").onclick = () => openWorkspaceChooser(true);
+$("wsdelbtn").onclick = async () => {
+  if (!currentWorkspace) { openWorkspaceChooser(false); return; }
+  const w = workspacesKnown.find(x => x.workspace === currentWorkspace);
+  const count = w ? `${w.entities} ` : "";
+  if (!confirm(`Delete workspace "${currentWorkspace}" and all its ${count}entities, facts and relations? This cannot be undone.`)) return;
+  try { await deleteWorkspaceByName(currentWorkspace); }
+  catch (e) { alert(e.message); }
+};
+$("ws-open").onclick = () => {
+  const name = $("ws-new").value.trim();
+  if (!name) return;
+  if (name === "all") { $("ws-err").textContent = "'all' is reserved."; return; }
+  $("ws-new").value = "";
+  chooseWorkspace(name);
+};
+$("ws-new").addEventListener("keydown", (e) => { if (e.key === "Enter") $("ws-open").click(); });
+$("ws-cancel").onclick = () => wsmodal.classList.remove("on");
+wsmodal.addEventListener("click", (e) => {
+  // only dismissable when a workspace is already active
+  if (e.target === wsmodal && currentWorkspace) wsmodal.classList.remove("on");
 });
 
 $("cleanupbtn").addEventListener("click", async () => {
+  if (!currentWorkspace) return;
   const btn = $("cleanupbtn");
   btn.disabled = true;
   btn.textContent = "Cleaning…";
   try {
-    const body = currentWorkspace === "all" ? {} : { workspace: currentWorkspace };
+    const body = { workspace: currentWorkspace };
     const r = await fetch("/api/cleanup", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -1042,7 +1182,7 @@ function openNewNode() {
   $("modal-title").textContent = "New node";
   $("modal-ok").textContent = "Create";
   $("modal-err").textContent = "";
-  const defWs = currentWorkspace === "all" ? "default" : currentWorkspace;
+  const defWs = currentWorkspace || "default";
   const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
   $("modal-body").innerHTML =
     '<label>Name</label><input id="m-name" placeholder="e.g. Aria Voss">' +
@@ -1065,45 +1205,60 @@ $("modal-ok").onclick = async () => {
   try {
     await edit({ op: "create_entity", workspace: ws, name, type, observations: fact ? [fact] : [] });
     closeModal();
-    if (currentWorkspace !== "all") currentWorkspace = ws;
     pendingSelect = nodeKey(ws, name);
-    lastGraphJson = "";
-    setAutoFit(true);
-    await poll();
-    if (currentWorkspace !== "all") $("wspick").value = currentWorkspace;
+    if (ws !== currentWorkspace) chooseWorkspace(ws);
+    else { lastGraphJson = ""; setAutoFit(true); await poll(); }
   } catch (e) { $("modal-err").textContent = e.message; }
 };
 
 // ----------------------------------------------------------------- polling --
+let pollTimer = null;
 async function poll() {
+  clearTimeout(pollTimer); // manual poll() calls must not multiply the loop
   try {
-    const wsQuery = currentWorkspace === "all" ? "" : `?workspace=${encodeURIComponent(currentWorkspace)}`;
-    const [g, l, s] = await Promise.all([
-      fetch(`/api/graph${wsQuery}`).then(r => r.json()),
-      fetch(`/api/logs?after=${lastSeq}`).then(r => r.json()),
-      fetch(`/api/stats${wsQuery}`).then(r => r.json()),
-    ]);
-    refreshWorkspacePicker();
-    const gj = JSON.stringify(g);
-    if (gj !== lastGraphJson) { lastGraphJson = gj; mergeGraph(g); }
-    if (l.entries.length) { renderLog(l.entries); lastSeq = l.entries[l.entries.length - 1].seq; }
-    else lastSeq = Math.max(lastSeq, l.last || 0);
-    $("t-ent").textContent = s.entities;
-    $("t-obs").textContent = s.observations;
-    $("t-rel").textContent = s.relations;
-    $("f-db").textContent = "db: " + s.db_path;
-    $("f-up").textContent = `daemon pid ${s.pid} · up since ${fmt(s.started)}`;
+    if (!currentWorkspace) {
+      // no workspace chosen yet (or it was deleted): keep logs, footer and the
+      // chooser list alive, leave the graph empty
+      const [l, s] = await Promise.all([
+        fetch(`/api/logs?after=${lastSeq}`).then(r => r.json()),
+        fetch(`/api/stats`).then(r => r.json()),
+      ]);
+      refreshWorkspacePicker();
+      if (l.entries.length) { renderLog(l.entries); lastSeq = l.entries[l.entries.length - 1].seq; }
+      else lastSeq = Math.max(lastSeq, l.last || 0);
+      $("t-ent").textContent = $("t-obs").textContent = $("t-rel").textContent = "–";
+      $("f-db").textContent = "db: " + s.db_path;
+      $("f-up").textContent = `daemon pid ${s.pid} · up since ${fmt(s.started)}`;
+    } else {
+      const wsQuery = `?workspace=${encodeURIComponent(currentWorkspace)}`;
+      const [g, l, s] = await Promise.all([
+        fetch(`/api/graph${wsQuery}`).then(r => r.json()),
+        fetch(`/api/logs?after=${lastSeq}`).then(r => r.json()),
+        fetch(`/api/stats${wsQuery}`).then(r => r.json()),
+      ]);
+      refreshWorkspacePicker();
+      const gj = JSON.stringify(g);
+      if (gj !== lastGraphJson) { lastGraphJson = gj; mergeGraph(g); }
+      if (l.entries.length) { renderLog(l.entries); lastSeq = l.entries[l.entries.length - 1].seq; }
+      else lastSeq = Math.max(lastSeq, l.last || 0);
+      $("t-ent").textContent = s.entities;
+      $("t-obs").textContent = s.observations;
+      $("t-rel").textContent = s.relations;
+      $("f-db").textContent = "db: " + s.db_path;
+      $("f-up").textContent = `daemon pid ${s.pid} · up since ${fmt(s.started)}`;
+    }
     $("conndot").classList.remove("err");
     $("conntext").textContent = "connected";
   } catch {
     $("conndot").classList.add("err");
     $("conntext").textContent = "daemon offline";
   }
-  setTimeout(poll, 2000);
+  pollTimer = setTimeout(poll, 2000);
 }
 
 resize();
 requestAnimationFrame(draw);
+openWorkspaceChooser(false);
 poll();
 </script>
 </body>

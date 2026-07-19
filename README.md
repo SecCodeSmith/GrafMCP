@@ -106,10 +106,11 @@ The first three are resource **templates** plus one static resource (`graf://wor
 
 Open **<http://127.0.0.1:7688>** (it starts automatically with the daemon; light and dark theme follow your OS).
 
-- **Workspace picker** (header) — defaults to *All workspaces*; pick one to filter the graph, tiles, entity list and stats down to that project. Populated live from `/api/workspaces`.
+- **Workspace chooser** (first screen) — the dashboard always shows exactly one workspace. On load it asks which one: pick from the list (with entity counts), open a new/empty one by name, or **🗑 delete** a workspace right there. Reopen it any time with the **Workspaces…** button in the header; the header select switches directly.
+- **🗑 Delete workspace button** (header) — deletes the current workspace with everything in it (entities, facts, relations), after a confirmation. Also available per-row in the workspace chooser. There is no undo — see *Backup & restore*.
 - **＋ New node button** (header) — create a node (name, type, workspace, optional first fact) straight from the dashboard.
-- **Clean up button** (header) — runs the `cleanup` maintenance pass against whatever workspace is selected (or everything, if *All workspaces* is selected) and reports how many duplicate/orphaned records it removed. Same thing `npm run cleanup` does from the terminal.
-- **Graph view** — force-directed layout of the memory. Node color = entity type (legend top-left), node size grows with fact count. Drag nodes, pan the background, zoom with the mouse wheel, hover for a tooltip, click to inspect. Auto-fits the whole graph until you pan/zoom/drag; the **Fit** button (top-right of the canvas) snaps back.
+- **Clean up button** (header) — runs the `cleanup` maintenance pass against the current workspace and reports how many duplicate/orphaned records it removed. Same thing `npm run cleanup` does from the terminal.
+- **Graph view** — force-directed layout of the memory. Node color = entity type (legend top-left), node size grows with fact count. **Click a legend row to hide/show that entity type** — a quick filter for large graphs (hidden types show struck-through). Drag nodes, pan the background, zoom with the mouse wheel, hover for a tooltip, click to inspect. Auto-fits the whole graph until you pan/zoom/drag; the **Fit** button (top-right of the canvas) snaps back.
 - **Activity log** — live feed of every tool call and every dashboard edit, with arguments, duration and errors. Also appended to `data/activity.jsonl`.
 - **Entities** — filterable list of everything stored; shows each entity's workspace when viewing *All workspaces*.
 - **Details** — the selected node's id, facts (with ids) and relations, plus a full **node editor**: rename the node or change its type (**✎ Edit**), delete it (**🗑 Delete node**), add a fact / click a fact to edit it / delete a fact (**×**), and add or remove relations to other entities. Every edit is written through `POST /api/edit` and shows up in the activity log.
@@ -207,7 +208,7 @@ Pass `workspace: "all"` on `recall`, `read_graph`, `find_nodes`, `search_facts` 
 
 **Pinning a workspace name explicitly:** if you don't want the folder-name default, either set `GRAF_MCP_WORKSPACE` in the MCP config, or put the workspace name in that project's `CLAUDE.md` / `AGENTS.md` (e.g. `Always pass workspace: "wh40k-titanfall" to graf-memory tools.`). There's no per-connection "current workspace" state on the daemon (it's stateless per request) — the workspace travels with each call; the bridge's folder-name injection is what makes that automatic without you repeating it.
 
-The dashboard's workspace picker (header) filters the graph/log/entities to one workspace, or shows *All workspaces* at once.
+The dashboard always shows one workspace at a time: the chooser on load (or the **Workspaces…** button) picks which, and workspaces can be deleted from there or with the header's **🗑 Delete workspace** button. (Tools can still pass `workspace: "all"` — only the dashboard's all-at-once view is gone.)
 
 ### Full physical isolation (separate database)
 

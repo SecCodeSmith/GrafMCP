@@ -648,6 +648,9 @@ async function handleApi(req, res, url) {
             if (body.id !== undefined && body.id !== null) result = await db.deleteEntityById(body.id, ws);
             else { await db.deleteEntity(body.name, ws); result = { name: body.name, workspace: ws }; }
             break;
+          case "delete_workspace":
+            result = await db.deleteWorkspace(body.workspace);
+            break;
           case "add_observation": {
             const added = await db.addObservations(body.entity, "note", [String(body.text || "")], ws);
             result = { entity: body.entity, added };

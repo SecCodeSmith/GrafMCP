@@ -490,6 +490,18 @@ export class GraphDB {
     return { name: node.name, workspace: node.workspace };
   }
 
+  /** Delete one entire workspace: every entity in it, their facts and their relations. */
+  async deleteWorkspace(workspace) {
+    if (!workspace || workspace === ALL_WORKSPACES) throw new Error("a concrete workspace name is required");
+    const [c] = await this.q(`MATCH (e:Entity) WHERE e.workspace = $ws RETURN count(e) AS c`, { ws: workspace });
+    await this.q(
+      `MATCH (e:Entity)-[:HAS_OBSERVATION]->(o:Observation) WHERE e.workspace = $ws DETACH DELETE o`,
+      { ws: workspace }
+    );
+    await this.q(`MATCH (e:Entity) WHERE e.workspace = $ws DETACH DELETE e`, { ws: workspace });
+    return { workspace, entitiesRemoved: Number(c.c) };
+  }
+
   // --- edit operations (used by the dashboard's node editor) ----------------
 
   /** Create (or, if it already exists, keep) an entity. Returns whether it was new. */
