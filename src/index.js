@@ -33,14 +33,22 @@ const DAEMON = path.join(__dirname, "daemon.js");
 
 const log = (msg) => process.stderr.write(`[graf-bridge] ${msg}\n`);
 
-// The workspace this agent works in is derived once, at startup, from the
-// folder the agent launched in (its cwd) — so each project gets its own
-// isolated memory automatically, with no per-call `workspace` argument and no
-// CLAUDE.md boilerplate. Override with GRAF_MCP_WORKSPACE; the reserved word
-// "all" would mean cross-workspace, so it never becomes a folder default.
+// The workspace this agent works in is derived once, at startup, from:
+// 1. Command-line argument (process.argv[2]) — highest priority
+// 2. GRAF_MCP_WORKSPACE env var
+// 3. Folder basename (cwd) — default
+// Each project gets isolated memory automatically with no per-call boilerplate.
+// The reserved word "all" would mean cross-workspace, so it never becomes a default.
 function deriveWorkspace() {
+  // Check command-line argument first
+  const argWorkspace = (process.argv[2] || "").trim();
+  if (argWorkspace) return argWorkspace.replace(/::/g, "_");
+
+  // Then env var
   const override = (process.env.GRAF_MCP_WORKSPACE || "").trim();
   if (override) return override.replace(/::/g, "_");
+
+  // Fall back to folder name
   const base = path.basename(process.cwd()).trim().replace(/::/g, "_");
   if (!base || base === "all") return "default";
   return base;
