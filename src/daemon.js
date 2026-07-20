@@ -364,6 +364,146 @@ function buildMcpServer() {
   );
 
   tool(
+    "get_stats",
+    {
+      title: "Get graph statistics",
+      description:
+        "Return counts of entities, observations, and relations in the workspace. Useful for " +
+        "understanding the size and complexity of the stored memory.",
+      inputSchema: { workspace: workspaceField() },
+    },
+    async ({ workspace }) => {
+      const stats = await db.stats(workspace || "all");
+      return jsonContent({ workspace: workspace || "all", ...stats });
+    }
+  );
+
+  tool(
+    "create_entity_direct",
+    {
+      title: "Create an entity directly",
+      description:
+        "Create or retrieve an entity with optional initial observations. Returns whether the " +
+        "entity was newly created or already existed.",
+      inputSchema: {
+        name: z.string().min(1).describe("Entity name"),
+        type: z.string().optional().describe("Entity type/category"),
+        workspace: workspaceField(),
+      },
+    },
+    async ({ name, type, workspace }) => {
+      const result = await db.createEntity(name, type || "note", workspace);
+      return jsonContent(result);
+    }
+  );
+
+  tool(
+    "set_entity_type",
+    {
+      title: "Change an entity's type",
+      description: "Update the type/category of an existing entity.",
+      inputSchema: {
+        name: z.string().min(1).describe("Entity name"),
+        type: z.string().min(1).describe("New type/category"),
+        workspace: workspaceField(),
+      },
+    },
+    async ({ name, type, workspace }) => {
+      await db.setEntityType(name, type, workspace);
+      return jsonContent({ name, type, workspace: workspace || "default" });
+    }
+  );
+
+  tool(
+    "rename_entity",
+    {
+      title: "Rename an entity",
+      description:
+        "Rename an entity. All its observations and relations are transferred to the new name. " +
+        "Observation IDs change; entity identity transfers cleanly.",
+      inputSchema: {
+        old_name: z.string().min(1).describe("Current entity name"),
+        new_name: z.string().min(1).describe("New entity name"),
+        workspace: workspaceField(),
+      },
+    },
+    async ({ old_name, new_name, workspace }) => {
+      const result = await db.renameEntity(old_name, new_name, workspace);
+      return jsonContent(result);
+    }
+  );
+
+  tool(
+    "update_fact",
+    {
+      title: "Edit a stored fact",
+      description: "Update the text of a single stored observation (fact) by its ID.",
+      inputSchema: {
+        observation_id: z.number().int().describe("ID of the observation to edit"),
+        text: z.string().min(1).describe("New fact text"),
+      },
+    },
+    async ({ observation_id, text }) => {
+      await db.updateObservation(observation_id, text);
+      return jsonContent({ observation_id, text });
+    }
+  );
+
+  tool(
+    "delete_workspace",
+    {
+      title: "Delete an entire workspace",
+      description:
+        "Permanently delete a workspace and all its entities, observations, and relations. " +
+        "Cannot be undone.",
+      inputSchema: {
+        workspace: z.string().min(1).describe("Workspace name to delete"),
+      },
+    },
+    async ({ workspace }) => {
+      if (!workspace || workspace === "all") {
+        return jsonContent({ error: "Must specify a concrete workspace name to delete." });
+      }
+      const result = await db.deleteWorkspace(workspace);
+      return jsonContent(result);
+    }
+  );
+
+  tool(
+    "delete_entity_direct",
+    {
+      title: "Delete an entity directly",
+      description: "Delete an entity by name, along with all its observations and relations.",
+      inputSchema: {
+        name: z.string().min(1).describe("Entity name to delete"),
+        workspace: workspaceField(),
+      },
+    },
+    async ({ name, workspace }) => {
+      await db.deleteEntity(name, workspace);
+      return jsonContent({ deleted: { name, workspace: workspace || "default" } });
+    }
+  );
+
+  tool(
+    "delete_relation_direct",
+    {
+      title: "Delete a specific relation",
+      description: "Delete one or more relations between two entities.",
+      inputSchema: {
+        from: z.string().min(1).describe("Source entity name"),
+        to: z.string().min(1).describe("Target entity name"),
+        relation_type: z.string().optional().describe("If provided, only delete relations of this type"),
+        workspace: workspaceField(),
+      },
+    },
+    async ({ from, to, relation_type, workspace }) => {
+      await db.deleteRelation(from, to, relation_type || null, workspace);
+      return jsonContent({ deleted: { from, to, relation_type: relation_type || "any", workspace: workspace || "default" } });
+    }
+  );
+
+  tool(
     "forget",
     {
       title: "Delete from memory",

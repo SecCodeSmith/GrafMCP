@@ -6,6 +6,14 @@ services:
     # bound to 127.0.0.1 on the host: dashboard and MCP stay local-only
     ports:
       - "127.0.0.1:7688:7688"
+    environment:
+      # GrafMCP workspace configuration
+      GRAF_MCP_WORKSPACE: grafmcp
+      GRAF_MCP_PORT: "7688"
+      GRAF_MCP_HOST: "0.0.0.0"
+      GRAF_MCP_DB: /app/data/graph.kuzu
+      # Enable debug logging if needed (set to "1")
+      GRAF_MCP_DEBUG: "0"
     volumes:
       - graf-data:/app/data
     restart: unless-stopped

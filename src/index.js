@@ -28,7 +28,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const PKG = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
 const PORT = Number(process.env.GRAF_MCP_PORT || 7688);
-const BASE = `http://127.0.0.1:${PORT}`;
+const HOST = "127.0.0.1";
+const BASE = `http://${HOST}:${PORT}`;
 const DAEMON = path.join(__dirname, "daemon.js");
 
 const log = (msg) => process.stderr.write(`[graf-bridge] ${msg}\n`);

@@ -1,8 +1,9 @@
 {
+  "$schema": "https://spec.modelcontextprotocol.io/json-schemas/client/mcp.json",
   "mcpServers": {
     "graf-memory": {
-      "command": "node",
-      "args": ["c:/Users/Kuba/Desktop/GrafMCP_For_WorksSpace/src/index.js"]
+      "url": "http://127.0.0.1:7688/mcp",
+      "disabled": false
     }
   }
 }
