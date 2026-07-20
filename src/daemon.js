@@ -17,6 +17,8 @@ const PORT = Number(process.env.GRAF_MCP_PORT || 7688);
 const HOST = process.env.GRAF_MCP_HOST || "127.0.0.1";
 // GRAF_MCP_DEBUG=1 additionally logs every MCP request method
 const DEBUG = process.env.GRAF_MCP_DEBUG === "1";
+// GRAF_MCP_LOG_LEVEL sets initial log level: debug, info, warning, error (default: info)
+const LOG_LEVEL = process.env.GRAF_MCP_LOG_LEVEL || "info";
 const DB_PATH = process.env.GRAF_MCP_DB || path.join(ROOT, "data", "graph.kuzu");
 const DATA_DIR = path.join(ROOT, "data");
 const UI_FILE = path.join(__dirname, "ui.html");
@@ -375,6 +377,43 @@ function buildMcpServer() {
     async ({ workspace }) => {
       const stats = await db.stats(workspace || "all");
       return jsonContent({ workspace: workspace || "all", ...stats });
+    }
+  );
+
+  tool(
+    "get_log_level",
+    {
+      title: "Get current log level",
+      description:
+        "Get the current log level setting. Returns the active level (debug, info, warning, or error) " +
+        "and its numeric value.",
+      inputSchema: {},
+    },
+    async () => jsonContent(logger.getLevel())
+  );
+
+  tool(
+    "set_log_level",
+    {
+      title: "Set log level",
+      description:
+        "Change the logging level to control verbosity. Options: debug (most verbose), info (default), " +
+        "warning, error (least verbose). Only messages at or above the current level are output.",
+      inputSchema: {
+        level: z
+          .enum(["debug", "info", "warning", "error"])
+          .describe("New log level: debug, info, warning, or error"),
+      },
+    },
+    async ({ level }) => {
+      const result = logger.setLevel(level);
+      return jsonContent({
+        ok: true,
+        changed: result.changed,
+        from: result.from,
+        to: result.to,
+        current: logger.getLevel(),
+      });
     }
   );
 
@@ -829,6 +868,29 @@ async function handleApi(req, res, url) {
       sendJson(res, 200, { entries: logger.since(after), last: logger.lastSeq });
       return;
     }
+    case "/api/log-level": {
+      if (req.method === "GET") {
+        sendJson(res, 200, { ...logger.getLevel() });
+        return;
+      }
+      if (req.method === "POST") {
+        let body;
+        try {
+          body = JSON.parse(await readBody(req));
+        } catch {
+          sendJson(res, 400, { error: "invalid JSON" });
+          return;
+        }
+        const result = logger.setLevel(body.level);
+        if (result.changed) {
+          logger.log("note", `log level changed: ${result.from} → ${result.to}`);
+        }
+        sendJson(res, 200, { ok: true, ...result, current: logger.getLevel() });
+        return;
+      }
+      sendJson(res, 405, { error: "GET or POST required" });
+      return;
+    }
     case "/api/log": {
       // lets external processes (e.g. the bridge, or you via curl) write a
       // line into the activity log for debugging
@@ -900,12 +962,12 @@ httpServer.on("error", (err) => {
 
 httpServer.listen({ port: PORT, host: HOST, exclusive: true }, async () => {
   try {
-    logger = createLogger(DATA_DIR);
+    logger = createLogger(DATA_DIR, LOG_LEVEL);
     db = new GraphDB(DB_PATH);
     await db.init();
     logger.log(
       "server",
-      `graf-memory daemon v${PKG.version} ready — dashboard http://127.0.0.1:${PORT} db ${DB_PATH}`
+      `graf-memory daemon v${PKG.version} ready — dashboard http://127.0.0.1:${PORT} db ${DB_PATH} log_level ${logger.getLevel().level}`
     );
     markReady();
   } catch (err) {

@@ -53,7 +53,7 @@
   }
   header h1 { font-size: 16px; font-weight: 650; letter-spacing: .01em; }
   header h1 span { color: var(--ink-muted); font-weight: 400; }
-  #wspick {
+  #wspick, #loglevel {
     padding: 5px 10px; border: 1px solid var(--baseline); border-radius: 8px;
     background: var(--page); color: var(--ink-1); font: 600 12.5px system-ui, sans-serif;
   }
@@ -61,6 +61,7 @@
     padding: 5px 12px; border: 1px solid var(--baseline); border-radius: 8px;
     background: var(--page); color: var(--ink-2); font: 600 12.5px system-ui, sans-serif; cursor: pointer;
   }
+  #loglevel { font-weight: 400; }
   #cleanupbtn:hover, #newbtn:hover, #wsswitch:hover { border-color: var(--accent); color: var(--accent); }
   #wsdelbtn:hover { border-color: var(--critical); color: var(--critical); }
   #cleanupbtn:disabled { opacity: .5; cursor: default; }
@@ -259,6 +260,12 @@
   <h1>GrafMCP <span>· graph memory for code agents</span></h1>
   <div id="conn"><span class="dot" id="conndot"></span><span id="conntext">connecting…</span></div>
   <select id="wspick" title="Current workspace"></select>
+  <select id="loglevel" title="Log level: Debug (verbose) to Error (errors only)">
+    <option value="debug">Debug</option>
+    <option value="info" selected>Info</option>
+    <option value="warning">Warning</option>
+    <option value="error">Error</option>
+  </select>
   <button id="wsswitch" title="Choose, open or delete workspaces">Workspaces…</button>
   <button id="wsdelbtn" title="Delete the current workspace and everything in it">🗑 Delete workspace</button>
   <button id="newbtn" title="Create a new node">＋ New node</button>
@@ -1211,6 +1218,41 @@ $("modal-ok").onclick = async () => {
   } catch (e) { $("modal-err").textContent = e.message; }
 };
 
+// ----------------------------------------------------- log level control --
+$("loglevel").addEventListener("change", async () => {
+  const level = $("loglevel").value;
+  try {
+    const response = await fetch("/api/log-level", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ level }),
+    });
+    if (response.ok) {
+      const data = await response.json();
+      if (data.changed) {
+        console.log(`Log level changed: ${data.from} → ${data.to}`);
+      }
+    }
+  } catch (e) {
+    console.error("Failed to set log level:", e);
+    // revert the selector on error
+    poll();
+  }
+});
+
+// Initialize log level selector from server
+async function initLogLevel() {
+  try {
+    const response = await fetch("/api/log-level");
+    if (response.ok) {
+      const data = await response.json();
+      $("loglevel").value = data.level;
+    }
+  } catch (e) {
+    console.error("Failed to fetch log level:", e);
+  }
+}
+
 // ----------------------------------------------------------------- polling --
 let pollTimer = null;
 async function poll() {
@@ -1258,6 +1300,7 @@ async function poll() {
 
 resize();
 requestAnimationFrame(draw);
+initLogLevel();
 openWorkspaceChooser(false);
 poll();
 </script>
