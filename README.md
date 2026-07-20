@@ -1,6 +1,6 @@
 # GrafMCP — Graph Memory for Code Agents
 
-A local MCP server that gives code agents (**Claude Code**, **Antigravity**, and any other MCP client) a **shared, persistent graph memory**, backed by [Kuzu](https://kuzudb.com/) — an embedded database purpose-built for graph storage and graph search — plus a live **web dashboard** showing the memory graph and an activity log.
+A local MCP server that gives code agents (**Claude Code**, **Antigravity**, and any other MCP client) a **shared, persistent graph memory**, backed by [Kuzu]([https://kuzudb.com/](https://github.com/kuzudb/kuzu)) — an embedded database purpose-built for graph storage and graph search — plus a live **web dashboard** showing the memory graph and an activity log.
 
 Typical use: long multi-session work where context must survive — e.g. writing a long story with many interlocking plot threads. The agent stores characters, chapters, plot threads and decisions as **entities**, attaches **facts** to them, and links them with typed **relations** (`foreshadows`, `suspects`, `part_of`, …). Next session — even from a different agent — it recalls and expands that graph instead of starting cold.
 
